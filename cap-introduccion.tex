@@ -3,12 +3,16 @@ En los últimos años, las tecnologías informáticas de la comunicación están
 
 Cada vez está todo más interconectado, con el consiguiente crecimiento del tráfico en todas las redes. Incluso empresas que antes contrataban redes privadas para sus comunicaciones, ahora utilizan internet.
 
-Como en cualquier servicio crítico el mantenimiento debe ser proactivo y por ello se han creado métodos para garantizar la máxima eficiencia de las comunicaciones. Algunos de estos métodos incluyen la securización de la red a través de \textit{firewalls}, \textit{proxys}, y \textit{SDI (Sistemas de Detección de Intrusión)}, y otros métodos que hacen posible asegurar la calidad de las comunicaciones son por ejemplo la medición de los parámetros de calidad de servicio (QoS).
+Como en cualquier servicio crítico el mantenimiento debe ser proactivo y por ello se han creado métodos para garantizar la máxima eficiencia de las comunicaciones. Algunos de estos métodos incluyen la securización de la red a través de \textit{firewalls}, \textit{proxys}, y \textit{SDI (Sistemas de Detección de Intrusión)}, y otros métodos para asegurar la calidad de las comunicaciones son por ejemplo la medición de los parámetros de calidad de servicio (QoS).
 
-Son varias las soluciones comerciales que implementan estas funcionalidades, pero actualmente no hay ninguna libre que implemente varias funcionalidades de una manera que aproveche al máximo la posible eficiencia del equipo.
+Son varias las soluciones comerciales que implementan estas funcionalidades, pero actualmente no hay ninguna libre que implemente varias funcionalidades de una manera que aproveche al máximo la posible eficiencia del equipo, haciendo un análisis \textit{on-the-go}.
 
 En el grupo de investigación \textit{Network Quality and Security (NQAS)} se ha implementado un sensor que implementa algunas de las citadas funcionalidades, en el diseño se ha contemplado la posibilidad de más adelante poder ampliarlo de una manera sencilla, y como valor añadido fundamental, aprovecha al máximo los recursos disponibles, ya que ha sido programado de una manera que permita ejecución multi-hilo.
 
-Este prototipo se llama ksensor, y es el fruto de años de investigación, ya que no es el primero que se ha creado. La línea de investigación principal, llamada hi-sensor, ha ido haciendo cada vez más compleja el diseño y la programación del prototipo. 
+Este prototipo se llama ksensor, aunque no es el primero que se ha creado. La línea de investigación principal, llamada hi-sensor, ha ido haciendo cada vez más complejo el diseño y la programación del prototipo con el objetivo de mejorar la eficacia.
 
-A rasgos generales, primero se diseño de forma que la aplicación fuera un programa de usuario que capturaba a través de las llamadas estándar al sistema. Se utilizaron también las librerías para tener computación multi-hilo, y se consiguieron unos resultados prometedores. Después, se pasaron a analizar redes de alta velocidad en saturación, y se vió que tenía.
+A rasgos generales, primero se diseño de forma que la aplicación fuera un programa de usuario que capturaba a través de las llamadas estándar al sistema. Se utilizaron también las librerías para tener computación multi-hilo, y se consiguieron unos resultados prometedores.
+
+Cuando se empezaron a analizar redes de alta velocidad en saturación, y se vio que había un problema: El equipo estaba continuamente capturando, y no había espacio para el análisis. Para solucionar este problema, se acordó migrar a espacio de kernel.
+
+El kernel es la base que hace que todos los programas funcionen. Es un programa que se encarga de gestionar los dispositivos y recursos de los que dispone el ordenador para tener un b
