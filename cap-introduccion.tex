@@ -1,11 +1,16 @@
-
+% !TeX spellcheck = es_ES
+% !TeX root = main.tex
 En los últimos años, las tecnologías informáticas de la comunicación están revolucionando la manera de comunicarse del mundo entero, tener acceso a internet se ha convertido en algo necesario para poder ponerse en contacto con el resto del mundo.
 
 Cada vez está todo más interconectado, con el consiguiente crecimiento del tráfico en todas las redes. Incluso empresas que antes contrataban redes privadas para sus comunicaciones, ahora utilizan internet.
 
-Como en cualquier servicio crítico el mantenimiento debe ser proactivo y por ello se han creado métodos para garantizar la máxima eficiencia de las comunicaciones. Algunos de estos métodos incluyen la securización de la red a través de \textit{firewalls}, \textit{proxys}, y \textit{SDI (Sistemas de Detección de Intrusión)}, y otros métodos para asegurar la calidad de las comunicaciones son por ejemplo la medición de los parámetros de calidad de servicio (QoS).
+Como en cualquier servicio crítico el mantenimiento debe ser proactivo y por ello se han creado métodos para garantizar la máxima eficiencia de las comunicaciones. Para ello se debe garantizar la seguridad en la red y la detección instantánea de problemas, asegurando así la \textit{QoS} (\textit{Quality of Service}, Calidad de Servicio).
 
-Son varias las soluciones comerciales que implementan estas funcionalidades, pero actualmente no hay ninguna libre que implemente varias funcionalidades de una manera que aproveche al máximo la posible eficiencia del equipo, haciendo un análisis \textit{on-the-go}.
+Para la securización de la red se implantan \textit{firewalls}, \textit{proxys}, y \textit{IDS}s (\textit{Intrusion Detection System}, Sistema de Detección de Intrusión), que se encargan de evitar accesos externos no autorizados a la red, controlar el tráfico saliente, y detectar posibles atacantes dentro de la red.
+
+El método para asegurar la calidad de las comunicaciones es la medición de parámetros de \textit{QoS}, tales como retardo de los paquetes, errores en la transmisión, tipos de tráfico comunes, rutas óptimas, etc.
+
+Son varias las soluciones comerciales que implementan estos servicios pero actualmente no hay ninguna que implemente todo en un mismo sistema. Además, no hay ningún producto de código libre que aproveche al máximo la posible eficiencia del equipo, haciendo un análisis \textit{online}\footnote{Online se refiere a hacer el análisis mientras se captura, en vez de capturar, guardar y luego analizar.}.
 
 En el grupo de investigación \textit{Network Quality and Security (NQAS)} se ha implementado un sensor que implementa algunas de las citadas funcionalidades, en el diseño se ha contemplado la posibilidad de más adelante poder ampliarlo de una manera sencilla, y como valor añadido fundamental, aprovecha al máximo los recursos disponibles, ya que ha sido programado de una manera que permita ejecución multi-hilo.
 
@@ -15,4 +20,10 @@ A rasgos generales, primero se diseño de forma que la aplicación fuera un prog
 
 Cuando se empezaron a analizar redes de alta velocidad en saturación, y se vio que había un problema: El equipo estaba continuamente capturando, y no había espacio para el análisis. Para solucionar este problema, se acordó migrar a espacio de kernel.
 
-El kernel es la base que hace que todos los programas funcionen. Es un programa que se encarga de gestionar los dispositivos y recursos de los que dispone el ordenador para tener un b
+El kernel es la base que hace que todos los programas funcionen. Es un programa que se encarga de gestionar los dispositivos y recursos del ordenador para ofrecer una interfaz libre de detalles a los programas. Además, también se encarga de hacer que varios programas se ejecuten como si se ejecutaran a la vez, que los programas sean capaces de direccionar una memoria que no existe de una forma transparente a ellos, manejando eficazmente una MMU (\textit{Memory Management Unit}, Unidad de Gestión de Memoria), y muchas otras cosas ocultas al programador más.
+
+En general, del diseño de un buen kernel dependerá la eficiencia del sistema. En nuestro caso, esta característica tiene valor añadido porque el diseño del kernel no está hecho para nuestro tipo de sistema. La eficiencia del kernel es buena para los sistemas operativos de carácter general, en los que capturar los paquetes de uno mismo es suficiente, y que es una cantidad pequeña en comparación con el tráfico de la red.
+
+El sistema que tenemos es únicamente para capturar y procesar y por lo tanto, la máxima eficiencia se puede describir como el equilibrio entre el tiempo en el que el ordenador esta capturando y el que está analizando. Se tienen que capturar exactamente el número de paquetes que se van a analizar.
+
+Ahora, el sistema es una
