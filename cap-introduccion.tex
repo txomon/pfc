@@ -1,5 +1,8 @@
 % !TeX spellcheck = es_ES
 % !TeX root = main.tex
+
+\section{Introducción}
+
 En los últimos años, las tecnologías informáticas de la comunicación están revolucionando la manera de comunicarse del mundo entero, tener acceso a internet se ha convertido en algo necesario para poder ponerse en contacto con el resto del mundo.
 
 Cada vez está todo más interconectado, con el consiguiente crecimiento del tráfico en todas las redes. Incluso empresas que antes contrataban redes privadas para sus comunicaciones, ahora utilizan internet.
@@ -26,4 +29,6 @@ En general, del diseño de un buen kernel dependerá la eficiencia del sistema. 
 
 El sistema que tenemos es únicamente para capturar y procesar y por lo tanto, la máxima eficiencia se puede describir como el equilibrio entre el tiempo en el que el ordenador esta capturando y el que está analizando. Se tienen que capturar exactamente el número de paquetes que se van a analizar.
 
-Ahora, el sistema es una
+La implementación actual se ha quedado obsoleta para kernels posteriores, ya que el tratamiento de los paquetes se hace de una forma diferente. Ahora se crean \textit{superpaquetes} ensamblando desde la captura los que tienen una serie de parametros iguales, como pueden ser la IP de origen, IP de destino, puerto TCP destino y origen. De esta manera, al pasar un único paquete (aunque grande) a la pila de protocolos, se acelera su tratamiento, ya que las copias de los paquetes se pueden hacer en una única transacción.
+
+Por lo tanto, el proyecto se enfoca a mejorar el anterior diseño para adaptarlo a la nueva manera de hacer las cosas, crear una serie de herramientas para validar el diseño y adaptar el proyecto a los estándares defacto existentes en kernel.org para hacer posible la liberación del código.
