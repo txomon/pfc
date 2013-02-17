@@ -1,9 +1,24 @@
 % !TeX spellcheck = es_ES
-\documentclass{article}
-\usepackage[utf8]{inputenc}
+\documentclass[a4paper]{report} % Para tener un documento grande pero sin ser un libro (solo hay esta posibilidad)
+\usepackage[latin1]{inputenc}   % Para la codificación
+\usepackage{textcomp}           % Para los simbolos de euro
+\usepackage[spanish]{babel}     % Para el lenguaje que tenga bien
+\usepackage[T1]{fontenc}        %      los saltos de linea con guión etc.
+\bibliographystyle{alpha}       % Estilo de bibliografía
+\usepackage{makeidx}            % Hacer índices
+\usepackage{fancyhdr}           % Cambiar las cabeceras del documento
+
+\title{Adaptación y extensión de la herramienta de captura y análisis de tráfico KSENSOR}
+\author{Javier Domingo Cansino}
+\makeindex
 
 \begin{document}
+\pagenumbering{Roman}
+\maketitle % Crear el título
+\tableofcontents % Crear la tabla de contenidos
 
+\part{Memoria}
+\pagenumbering{arabic}
 \include{cap-introduccion}
 \include{cap-objetivos}
 \include{cap-beneficios}
@@ -14,4 +29,10 @@
 \include{cap-riesgos}
 \include{cap-referencias}
 
+\part{Diseño}
+\pagenumbering{arabic}
+
+\part*{Bibliografía}
+\part*{Índice}
+\printindex
 \end{document}
