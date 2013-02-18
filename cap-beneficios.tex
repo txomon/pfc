@@ -2,8 +2,7 @@
 % !TeX root = main.tex
 
 \chapter{Beneficios}
-En esta sección se presentan los principales beneficios que aporta el proyecto, los
-cuales se engloban fundamentalmente en tres campos:
+En esta sección se presentan los principales beneficios que aporta el proyecto, los cuales se engloban fundamentalmente en tres campos:
 \begin{enumerate}
 \item Beneficios técnicos
 \item Beneficios económicos
@@ -14,15 +13,18 @@ cuales se engloban fundamentalmente en tres campos:
 La ejecución del proyecto planteado aporta una serie de beneficios técnicos en el campo del análisis de tráfico de red. A continuación, se describe individualmente cada uno de ellos.
 
 \subsection{Análisis del tráfico en redes de alta velocidad}
-Optimizando el proceso de captura de los paquetes, el sensor a nivel de kernel permitirá realizar el análisis del tráfico en redes de alta velocidad. Éste es el principal objetivo que se ha definido en el proyecto, así como el principal beneficio técnico que se espera obtener. El análisis del tráfico en redes de alta velocidad exige un coste computacional elevado, que no es posible obtener mediante las arquitecturas clásicas. Dicho problema se encuentra actualmente en fase de investigación y es objeto de estudio por la comunidad científica. El proyecto que se plantea propone una solución software que, al funcionar desde el nivel de kernel, permitirá efectuar una captura eficiente de los paquetes, y al trabajar sobre plataformas multiprocesador, realizar el análisis concurrente de los mismos.
+Optimizando el proceso de captura de los paquetes, el sensor a nivel de kernel permitirá realizar el análisis del tráfico en redes de alta velocidad. Éste es el principal objetivo que se ha definido en el proyecto, así como el principal beneficio técnico que se espera obtener. 
+El análisis del tráfico en redes de alta velocidad exige un coste computacional elevado, que no es posible obtener mediante las arquitecturas clásicas. Dicho problema se encuentra actualmente en fase de investigación y es objeto de estudio por la comunidad científica. 
+El proyecto que se plantea propone una solución software que, al funcionar desde el nivel de kernel, permitirá efectuar una captura eficiente de los paquetes, y al trabajar sobre plataformas multiprocesador, realizar el análisis concurrente de los mismos.
 
 \subsection{Integración de tipos de análisis}
-El sensor ha sido diseñado de forma que se pueda realizar cualquier tipo de análisis sobre el tráfico capturado. Cuando se captura un paquete de la red, el sensor lo procesa atendiendo a la lógica de procesamiento cargada en memoria por el parser. Dicho mapa de memoria se organiza en la forma de un árbol de nodos de decisión, que el motor de análisis del sensor recorre para determinar el tratamiento que se le ha de dar al paquete. El diseño de la lógica de nodos es genérico y multidisciplinar, por lo que permite efectuar cualquier tipo de tratamiento sobre el tráfico capturado. Así pues, el sensor es válido en diferentes ámbitos de la telemática como la detección de intrusión, la monitorización inteligente de red o la medida de parámetros de calidad de servicio.
+Ksensor ha sido diseñado de forma que pueda realizar cualquier tipo de análisis sobre el tráfico capturado. Cuando se captura un paquete de la red, la sonda lo procesa atendiendo a la lógica de procesamiento cargada en memoria por el parser. Dicho mapa de memoria se organiza en la forma de un árbol de nodos de decisión, que el motor de análisis del sensor recorre para determinar el tratamiento que se le ha de dar al paquete.
+El diseño de la lógica de nodos es genérico y multidisciplinar, por lo que permite efectuar cualquier tipo de tratamiento sobre el tráfico capturado. Así pues, el sensor es válido en diferentes ámbitos de la telemática como la detección de intrusión, la monitorización inteligente de red o la medida de parámetros de calidad de servicio.
 
 \subsection{Arquitectura de pruebas}
-Con el fin de poder realizar pruebas de rendimiento en el sensor de forma automatizada, en este proyecto se ha desarrollado una arquitectura de pruebas, basada en la plataforma genérica diseñada en [BEAU05]. Esta arquitectura permite comprobar el comportamiento tanto de Adviser como de ksensor cuando se los somete a un patrón de tráfico determinado. Para ello se utilizan plantillas de pruebas o tests, que el sistema ejecuta de forma automatizada y sucesiva, configurando el sensor y los inyectores según se especifique en la plantilla.
+Con el fin de poder realizar pruebas de rendimiento en el sensor de forma automatizada, en este proyecto se ha desarrollado una arquitectura de pruebas, basada en la plataforma genérica diseñada en \cite{AABS05}. Esta arquitectura permite comprobar el comportamiento tanto de Adviser como de Ksensor cuando se los somete a un patrón de tráfico determinado. Para ello se utilizan plantillas de pruebas o tests, que el sistema ejecuta de forma automatizada y sucesiva, configurando la sonda y los inyectores según se especifique en la plantilla.
 
-El sistema puede configurarse para utilizar uno o dos inyectores de tráfico, de forma que pueden combinarse ambos para saturar el enlace, y comprobar el rendimiento de los sensores con cargas altas de tráfico. Asimismo, la arquitectura recoge diversas estadísticas de las pruebas realizadas, de cada uno de los componentes que participan en las mismas: switch, interfaces de red, inyectores, sensor, etc.
+En la arquitectura actual, se dispone de inyectores hardware, llamados DAG, que son capaces de inyectar a una tasa capaz de saturar el enlace, permitiendo probar el sistema bajo condiciones de estrés, que se dan en redes de alta velocidad. Asimismo, la arquitectura recoge diversas estadísticas de las pruebas realizadas, de cada uno de los componentes que participan en las mismas: switch, interfaces de red, inyectores, sonda, etc.
 
 
 \section{Beneficios económicos}

@@ -2,31 +2,33 @@
 % !TeX root = main.tex
 
 \chapter{Objetivos}
-El objetivo principal del proyecto es la \textbf{adaptación del programa ksensor y modificaciones asociadas en kernel a una versión actual y el desarrollo de herramientas para la validación del prototipo}. El diseño actual es el descrito en el proyecto KSENSOR.
+El objetivo principal del proyecto es la \textbf{adaptación del programa ksensor y modificaciones asociadas en kernel a una versión actual y el desarrollo de herramientas para la validación del prototipo}. El diseño actual es el descrito en el proyecto KSENSOR\cite{KABO05}.
 
 Por lo tanto, los objetivos a conseguir mediante este proyecto son:
 
 \begin{enumerate}
 \item Captura eficiente del tráfico de red
 \item Paralelización del análisis
-\item Compatibilidad con los módulos externos al sensor
+\item Compatibilidad con los módulos externos a la sonda
 \item Estudio comparativo de rendimientos
 \end{enumerate}
 
 \section{Captura eficiente del tráfico de red}
 Ksensor debe optimizar el proceso de captura de los paquetes, eliminando si es preciso acciones realizadas por el kernel que no son estrictamente necesarias para el buen funcionamiento del sistema (recolección de estadísticas, copia del paquete a espacio de usuario, etc.).
 
-El kernel de Linux es de propósito general, por lo que no está específicamente diseñado para realizar una captura eficiente del tráfico. Ya que la mayor parte de los sistemas de análisis de tráfico a nivel de usuario se apoyan para realizar la captura en las facilidades proporcionadas por sistemas operativos de propósito general, su rendimiento no es óptimo. El sensor que se propone en este proyecto debe, al trabajar directamente desde el nivel de kernel, resolver dichas ineficiencias, evitando por ejemplo capturar paquetes que posteriormente no pueda analizar, lo cual sin duda degradaría el rendimiento.
+El kernel de Linux es de propósito general, por lo que no está específicamente diseñado para realizar una captura eficiente del tráfico. Ya que la mayor parte de los sistemas de análisis de tráfico a nivel de usuario se apoyan para realizar la captura en las facilidades proporcionadas por sistemas operativos de propósito general, su rendimiento no es óptimo. La sonda que se propone en este proyecto debe, al trabajar directamente desde el nivel de kernel, resolver dichas ineficiencias, evitando por ejemplo capturar paquetes que posteriormente no pueda analizar, lo cual sin duda degrada el rendimiento.
 
 \section{Paralelización del análisis}
-El análisis del tráfico en redes de alta velocidad es un proceso costoso, que le exige al sensor un alto rendimiento y una capacidad de procesamiento que no se pueden conseguir con las arquitecturas convencionales. Con el fin de acomodar el sensor a las necesidades de procesamiento requeridas por la red, en este proyecto se propone mejorar las prestaciones de una máquina aumentando el número de procesadores.
+El análisis del tráfico en redes de alta velocidad es un proceso costoso, que le exige a la sonda un alto rendimiento y una capacidad de procesamiento que no se puede conseguir con las arquitecturas convencionales. Con el fin de acomodar ksensor a las necesidades de procesamiento requeridas por la red, en este proyecto se propone mejorar las prestaciones de una máquina aumentando el número de procesadores que ejecutan análisis de red.
 
-Así pues, con un diseño en base a plataformas multiprocesador, se podrá disponer de múltiples instancias de análisis en el sensor, trabajando de forma concurrente sobre el tráfico capturado. El sistema diseñado deberá permitir, en la medida de lo posible, el paralelismo en el procesado de los paquetes, a fin de obtener un alto rendimiento. Se deberá resolver, también, la sincronización en el acceso a la información compartida entre instancias.
+Así pues, con un diseño en base a plataformas multiprocesador, se podrá disponer de múltiples instancias de análisis en la sonda, trabajando de forma concurrente sobre el tráfico capturado. El sistema diseñado deberá permitir, en la medida de lo posible, el paralelismo en el procesado de los paquetes, a fin de obtener un alto rendimiento. Se deberá resolver también, la sincronización en el acceso a la información compartida entre instancias.
 
-\section{Compatibilidad con los módulos externos al sensor}
-En el presente proyecto se propone migrar el sensor a nivel de kernel con el fin de optimizar su rendimiento. Debemos tener en cuenta, sin embargo, que el sensor es tan sólo el núcleo del sistema de análisis de tráfico, y que para su buen funcionamiento necesita trabajar de forma coordinada con el resto de componentes del sistema, en particular, con el parser y el módulo de procesamiento offline [DEL03], los cuales necesitan acceder al mapa de memoria del sensor para realizar su cometido. Por esta razón, el sensor debe ofrecer una interfaz unificada y genérica para el acceso a su mapa de memoria desde el espacio de usuario, y controlar el acceso al mismo a través de algún mecanismo de sincronización. El diseño que se realice deberá contemplar además la posibilidad de que existan nuevos módulos en el futuro.
+\section{Compatibilidad con los módulos externos la sonda}
+Debemos tener en cuenta que la sonda es tan sólo el núcleo del sistema de análisis de tráfico, y que para su buen funcionamiento necesita trabajar de forma coordinada con el resto de componentes del sistema, en particular, con el parser y el módulo de procesamiento offline\cite{AIDG03}, los cuales necesitan acceder al mapa de memoria de ksensor para realizar su cometido. Por esta razón, la sonda debe ofrecer una interfaz unificada y genérica para el acceso a su mapa de memoria desde el espacio de usuario y controlar el acceso al mismo a través de algún mecanismo de sincronización. El diseño que se realice deberá contemplar además la posibilidad de que existan nuevos módulos en el futuro.
 
 \section{Estudio comparativo de rendimientos}
-El sensor a nivel de kernel (ksensor) pretende resolver las limitaciones inherentes al diseño del sensor en espacio de usuario (Adviser), con el fin de obtener una mejora de prestaciones que posibiliten el análisis del tráfico en redes de alta velocidad. Sin embargo, una implementación deficiente o, quizás, la existencia de factores que no se han considerado podrían impedir obtener los resultados esperados. Por lo tanto, se hace necesario poder comprobar y cuantificar las mejoras de rendimiento obtenidas, para poder valorar la viabilidad de un futuro producto comercial.
+La sonda a nivel de kernel (ksensor) pretende resolver las limitaciones inherentes al diseño del sensor en espacio de usuario (Adviser), con el fin de obtener una mejora de prestaciones que posibiliten el análisis del tráfico en redes de alta velocidad. Sin embargo, una implementación deficiente o, quizás, la existencia de factores que no se han considerado podrían impedir obtener los resultados esperados. Por lo tanto, se hace necesario poder comprobar y cuantificar las mejoras de rendimiento obtenidas, para poder valorar la viabilidad de un futuro producto comercial.
 
-En este proyecto se implementará un prototipo de ksensor, el cual permitirá realizar las pruebas de rendimiento pertinentes, con el fin de poder valorar los resultados y comprobar las mejoras obtenidas, si las hubiera. Las pruebas de rendimiento permitirán, asimismo, conocer los parámetros de configuración óptimos en el sensor.
+En este proyecto se reimplementará un prototipo de ksensor, el cual permitirá realizar las pruebas de rendimiento pertinentes, con el fin de poder valorar los resultados y comprobar las mejoras obtenidas, si las hubiera. Las pruebas de rendimiento permitirán, asimismo, conocer los parámetros de configuración óptimos en la sonda.
+
+Se debe tener en cuenta, que el rendimiento debe ser al menos, mejor que la anterior implementación, ya que en este caso se tiene un punto de partida. Para la comparación, se implementarán herramientas de medición del patrón de tiempos para poder diagnosticar efectos que no se hayan podido observar en el diseño.
