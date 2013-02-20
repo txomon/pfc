@@ -19,6 +19,7 @@ El proyecto que se plantea propone una solución software que, al funcionar desde
 
 \subsection{Integración de tipos de análisis}
 Ksensor ha sido diseñado de forma que pueda realizar cualquier tipo de análisis sobre el tráfico capturado. Cuando se captura un paquete de la red, la sonda lo procesa atendiendo a la lógica de procesamiento cargada en memoria por el parser. Dicho mapa de memoria se organiza en la forma de un árbol de nodos de decisión, que el motor de análisis del sensor recorre para determinar el tratamiento que se le ha de dar al paquete.
+
 El diseño de la lógica de nodos es genérico y multidisciplinar, por lo que permite efectuar cualquier tipo de tratamiento sobre el tráfico capturado. Así pues, el sensor es válido en diferentes ámbitos de la telemática como la detección de intrusión, la monitorización inteligente de red o la medida de parámetros de calidad de servicio.
 
 \subsection{Arquitectura de pruebas}
@@ -34,28 +35,29 @@ La utilización del sistema diseñado como herramienta de análisis de tráfico intr
 En la actualidad no existen apenas herramientas en el mercado capaces de realizar el análisis del tráfico en redes de alta velocidad. Ksensor ha sido específicamente diseñado para satisfacer las necesidades de captura y procesamiento típicas en estas redes. Así, un producto derivado del prototipo de ksensor podría ser utilizado en los segmentos de alta velocidad de los Proveedores de Servicios de Internet (ISP), en los cuales podría resultar útil la medida de parámetros de QoS o la monitorización del tráfico cursante. Podría ser utilizado, también, como herramienta de análisis en las redes de área local de las empresas.
 
 \subsubsection{Localización de fallos de red}
-El buen funcionamiento de las redes corporativas es indispensable en el ejercicio empresarial. Esto es especialmente cierto en la actualidad, en que la mayor parte de las transacciones se realizan de forma telemática. Si por algún motivo la red completa cae puede significar un parón en el proceso productivo. La indisponibilidad del servicio impide que los clientes puedan contactar con la empresa o que se confirmen los pedidos. En cualquier caso, afectará negativamente a la producción y, en periodos de indisponibilidad largos, degradará su imagen. Haciendo uso del sensor se podría reducir el tiempo entre que ocurre el fallo y se arregla. El sensor analizaría todo el tráfico que circula por la red y podría programarse por ejemplo para monitorizar las conexiones con el servidor web. Si éste fallara, el sensor lo detectaría y podría generar una alarma para indicarlo. De este modo, el administrador de la red podría utilizar el sensor como herramienta de diagnóstico para localizar el origen del problema.
+El buen funcionamiento de las redes corporativas es indispensable en el ejercicio empresarial. Esto es especialmente cierto en la actualidad, en que la mayor parte de las transacciones se realizan de forma telemática. Si por algún motivo la red completa cae puede significar un parón en el proceso productivo. La indisponibilidad del servicio impide que los clientes puedan contactar con la empresa o que se confirmen los pedidos. En cualquier caso, afectará negativamente a la producción y, en periodos de indisponibilidad largos, degradará su imagen.
+
+Haciendo uso de la sonda se podría reducir el tiempo entre que ocurre el fallo y se arregla. La sonda analizaría todo el tráfico que circula por la red y podría programarse por ejemplo para monitorizar las conexiones con el servidor web. Si éste fallara, la sonda lo detectaría y podría generar una alarma para indicarlo. De este modo, el administrador de la red podría utilizar la sonda como herramienta de diagnóstico para localizar el origen del problema.
+
+En un caso de uso más avanzado, se podría incluso llegar a detectar los fallos, sin llegar a caer el servicio. Por ejemplo, se podría programar la sonda para que analizara las retransmisiones, el retardo y parámetros de rutado de paquetes, resultando en que en caso de detectarse un número de paquetes con el TTL a punto de expirar, demasiadas retransmisiones o cualquier otro síntoma de inestabilidad en la red, avisara al administrador, o incluso, activara directivas de balanceo de tráfico.
 
 \subsubsection{Detección de ataques en la red}
-La seguridad es uno de los factores clave en el diseño de las redes corporativas. De no preservarse la integridad de las comunicaciones, personas ajenas a la empresa podrían obtener información privada o amenazar de algún modo su funcionamiento normal. Si bien ya existen dispositivos específicos con este fin, como los firewall, debe tenerse en cuenta que gran parte de los ataques proceden del interior de la empresa, y que por tanto pueden burlar sin problemas las medidas de seguridad perimetral. El sensor, mediante el análisis del tráfico de la red, podría realizar la labor de un sistema de detección de intrusión, buscando patrones de tráfico que considera sospechosos, independientemente de su procedencia, y por tanto útil también en estos casos.
+La seguridad es uno de los factores clave en el diseño de las redes corporativas. De no preservarse la integridad de las comunicaciones, personas ajenas a la empresa podrían obtener información privada o amenazar de algún modo su funcionamiento normal. Si bien ya existen dispositivos específicos con este fin, como los firewall, debe tenerse en cuenta que gran parte de los ataques proceden del interior de la empresa, y que por tanto pueden burlar sin problemas las medidas de seguridad perimetral. La sonda, mediante el análisis del tráfico de la red, podría realizar la labor de un sistema de detección de intrusión, buscando patrones de tráfico que considera sospechosos, independientemente de su procedencia, y por tanto útil también en estos casos.
 
 \subsubsection{Reducción de los dispositivos necesarios}
-El diseño del sensor permite integrar en un único dispositivo diferentes tipos de
-análisis, que de lo contrario únicamente podrían realizarse utilizando un conjunto de
-sistemas específicos. Así, el sensor puede obtener diversos parámetros de la red,
-monitorizar las conexiones o incluso buscar patrones de tráfico al igual que en los
-sistemas de detección de intrusión.
+El diseño de ksensor permite integrar en un único dispositivo diferentes tipos de análisis, que de lo contrario únicamente podrían realizarse utilizando un conjunto de
+sistemas específicos. Así, la sonda puede obtener diversos parámetros de la red, monitorizar las conexiones o incluso buscar patrones de tráfico al igual que en los sistemas de detección de intrusión.
 
 
 \section{Beneficios sociales}
 
-Los beneficios sociales que aporta el sensor se derivan principalmente de la utilización de la arquitectura automatizada de pruebas, expuesta anteriormente en el apartado de beneficios técnicos.
+Los beneficios sociales que aporta la sonda se derivan principalmente de la utilización de la arquitectura automatizada de pruebas, expuesta anteriormente en el apartado de beneficios técnicos.
 
-\subsection{Búsqueda de parámetros óptimos en el sensor}
-La arquitectura de pruebas puede utilizarse para comprobar el funcionamiento del sensor con diferentes parámetros de configuración, sometido a diversas cargas de red que también es posible especificar. De este modo, se pueden obtener de forma empírica los parámetros óptimos configurables en el sensor, como puede ser, por ejemplo, el tamaño de la cola en la que se almacenan los paquetes capturados.
+\subsection{Búsqueda de parámetros óptimos en la sonda}
+La arquitectura de pruebas puede utilizarse para comprobar el funcionamiento de la sonda con diferentes parámetros de configuración, sometido a diversas cargas de red que también es posible especificar. De este modo, se pueden obtener de forma empírica los parámetros óptimos configurables en el sensor, como puede ser, por ejemplo, el tamaño de la cola en la que se almacenan los paquetes capturados, el número óptimo de tarjetas de red, o la frecuencia de captura de paquetes.
 
-\subsection{Comparativa de rendimientos entre sensores}
-La arquitectura de pruebas se puede utilizar para realizar una comparativa de rendimiento entre los sensores a nivel de kernel  (ksensor) y a nivel de usuario (Adviser), con la finalidad de apreciar el comportamiento que éstos presentan cuando se los somete a un patrón de tráfico determinado. La ejecución de dichas pruebas permitirá, asimismo, justificar la realización de una continuación de este proyecto, en el caso de que se obtengan resultados favorables en el rendimiento de ksensor.
+\subsection{Comparativa de rendimientos entre sondas}
+La arquitectura de pruebas se puede utilizar para realizar una comparativa de rendimiento entre las sondas a nivel de kernel ksensor y su nueva implementación actualizada, con la finalidad de apreciar el comportamiento que éstos presentan cuando se los somete a un patrón de tráfico determinado. Tal y como la ejecución de dichas pruebas permitió, asimismo, justificar la realización de este proyecto de continuación, al haberse obtenido resultados favorables en el rendimiento de ksensor.
 
 \subsection{Reducción del tiempo invertido en pruebas}
-Las pruebas se realizan de forma automatizada, con lo cual únicamente es necesario definir una batería de pruebas y el sistema las ejecutará sucesivamente en el orden que se hayan especificado. En consecuencia, el tiempo que se ha de invertir en realizar las pruebas se reduce notablemente.
+Las pruebas se realizan de forma automatizada, con lo cual únicamente es necesario definir una batería de pruebas y el sistema las ejecutará sucesivamente en el orden que se hayan especificado. En consecuencia, el tiempo que una persona ha de invertir en realizar las pruebas se reduce notablemente y por lo tanto reduciendo costes.
