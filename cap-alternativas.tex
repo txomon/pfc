@@ -2,3 +2,23 @@
 % !TeX root = main.tex
 
 \chapter{Análisis de alternativas}
+En este capítulo se expondrán primeramente las especificaciones y requerimientos básicos del presente proyecto, describiendo brevemente la arquitectura inicial de la cual se parte en el diseño de la sonda e indicando los requerimientos que se le imponen inicialmente.
+
+Se expondrán asimismo las mejoras que se pretenden conseguir con el nuevo diseño, indicando los requisitos que debe cumplir el kernel del sistema operativo para llevarlas a cabo. A continuación, se expondrán las alternativas de diseño que se deben considerar en la realización del proyecto y se hará un estudio para determinar cuál es la óptima en cada caso.
+
+A lo largo del diseño se han de tomar decisiones que van a contribuir de forma decisiva al éxito o fracaso del proyecto. Por esta razón, conviene analizar minuciosamente las alternativas que existen. No es necesario tener en cuenta todas y cada una de las posibilidades pero sí las que puedan resultar críticas a la hora de aportar una solución.
+
+Así pues, se partirá de los requerimientos apuntados en el primer apartado para a continuación plantear las alternativas concernientes a los puntos más críticos del diseño, y una vez tomadas las decisiones oportunas, se pasará, en el capítulo de Diseño, a describir con mayor detenimiento la solución general propuesta, incidiendo especialmente en las partes previamente discutidas.
+
+\section{Especificaciones y requerimientos básicos}
+En el presente proyecto se plantea el desarrollo de una sonda de análisis de tráfico a nivel de kernel, para lo cual se parte de un diseño previo de la sonda (Ksensor), realizado en un proyecto anterior \cite{KABO05}. La sonda es el núcleo de una arquitectura dedicada al análisis de tráfico, la cual incluye además de la sonda, algunos módulos externos a éste pero que tienen relación directa con él, como el parser o el OPM. Así pues, se hace necesario considerar los requerimientos que imponen estos módulos, ya que pueden condicionar en buena parte el diseño que se realice en el nivel de kernel.
+
+Por otro lado, conviene especificar las mejoras de diseño que se pretenden obtener con la migración de Ksensor, en base a las cuales se ha justificado la realización de este proyecto. El cumplimiento o no de dichas mejoras condicionarán el éxito o fracaso del proyecto, por lo que se plantearán también las mejoras que ha tenido el kernel de Linux para poder obtenerlas.
+
+\subsection{Arquitectura de partida}
+
+\begin{figure}
+\centering
+\def\svgwidth{\columnwidth}
+\includesvg{images/arquitectura-previa}
+\end{figure}
