@@ -16,9 +16,29 @@ En el presente proyecto se plantea el desarrollo de una sonda de análisis de trá
 Por otro lado, conviene especificar las mejoras de diseño que se pretenden obtener con la migración de Ksensor, en base a las cuales se ha justificado la realización de este proyecto. El cumplimiento o no de dichas mejoras condicionarán el éxito o fracaso del proyecto, por lo que se plantearán también las mejoras que ha tenido el kernel de Linux para poder obtenerlas.
 
 \subsection{Arquitectura de partida}
+En la siguiente figura, se puede ver la arquitectura actual del sistema implementado Ksensor. Aunque los módulos que componen el sistema vienen de un sistema anterior llamado Adviser, se explicarán brevemente a continuación.
 
-\begin{figure}
+\begin{figure}[h]
 \centering
-\def\svgwidth{\columnwidth}
-\includesvg{images/arquitectura-previa}
+\includegraphics[width=\textwidth]{images/arquitectura-previa}
+\caption{Esquema de la arquitectura previa de ksensor}
+\label{fig:arquitectura-previa}
 \end{figure}
+
+En la figura \ref{fig:arquitectura-previa} se pueden observar los módulos que componen el sistema. Los paquetes se capturan en las tarjetas de red y el módulo de captura se encarga de procesar directamente los paquetes, sirviéndolos cuando se solicita a las instancias del módulo de procesamiento.
+
+La sonda es el núcleo del sistema de análisis. El resto de módulos pretenden bien configurar su comportamiento (parser) o bien recoger los resultados del procesamiento realizado (OPM). En cualquier caso, el nexo de unión entre todos ellos es la memoria interna del sensor, a la que también nos referiremos como mapa de memoria. En el mapa de memoria se almacena la lógica de decisión que posteriormente utilizará tanto en el módulo de captura, para decidir si un paquete debe ser capturado, como en el módulo de procesamiento del sensor para determinar el análisis que se ha de realizar cada vez que se captura un paquete.
+
+El parser es el encargado de cargar en la memoria del sensor la información que éste requiere para funcionar de forma correcta. Para ello, el parser toma como
+entrada un fichero de reglas en XML especificado por el administrador del sistema. El fichero de reglas se escribe utilizando un lenguaje propio, el cual se ha definido teniendo en cuenta muchas características de entornos de captura de tráfico como sistemas de detección de intrusión, cortafuegos, etc.
+
+El parser lee e interpreta el fichero de reglas que haya especificado el administrador del sistema y lo traduce al formato que entiende el sensor, almacenando en el mapa de memoria la lógica adecuada y la información de entorno necesaria para el análisis de tráfico. Para ello, se crean varias listas enlazadas: una para el árbol de nodos, otra para los tipos de datos, acciones periódicas, etc. También se reserva un espacio para almacenar las variables, que será donde el sensor deposite la información y estadísticas que se le han pedido.
+
+Si el parser es la interfaz de entrada al sensor, el módulo de procesamiento offline (OPM) constituye su interfaz de salida. El módulo de procesamiento offline es el encargado de recolectar toda la información que se obtiene como resultado del análisis del tráfico y de formatearla para su posterior procesamiento fuera del sensor.
+
+En el nuevo diseño se va a dejar este diseño de los módulos, ya que se ha comprobado empíricamente que no plantea ningún tipo de degradación de rendimiento, y además, permite que la aplicación Ksensor pueda estar en ejecución o no, haciendo uso de la propiedad de modularidad del kernel de Linux.
+
+\subsection{Mejoras del diseño}
+Este proyecto propone una adaptación del diseño existente de Ksensor a una versión de Linux actual. Preservando su compatibilidad con las herramientas externas pero mejorando el funcionamiento interno, la integración en el árbol de kernel, y creando nuevas herramientas que permitan estudiar el comportamiento del sistema, tanto con Ksensor funcionando como deshabilitado.
+
+Con un análisis exhaustivo del código de las rutinas de recepción de paquetes, se ha llegado a la conclusión de que aún con el sistema en saturación, hay recursos 
