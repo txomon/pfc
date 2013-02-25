@@ -2,3 +2,112 @@
 % !TeX root = main.tex
 
 \chapter{Gestión}
+En este capítulo se resumen las tareas de gestión que se deben desempeñar en la realización del presente proyecto. Se expondrá el resumen del plan de trabajo que se debe seguir y el resumen del presupuesto. En primer lugar, se presentará el grupo humano de trabajo que participará en la realización de los mismos, el cual es común en ambos casos.
+
+\section{Equipo de trabajo}
+Para el desarrollo del presente proyecto y el del proyecto de continuación se debe contar con el siguiente equipo de trabajo:
+\begin{center}
+\rowcolors{1}{gray}{white}
+\begin{tabular}{|c|c|p{5cm}|}
+\hline CÓDIGO & RESPONSABILIDAD & DESCRIPCIÓN \\ 
+\hiderowcolors
+\hline H1 & Director de proyecto & Será el encargado de supervisar los diseños y de que se cumpla con el plan de trabajo. \\ 
+\hline H2 & Diseñador & Será el encargado de realizar el diseño de los módulos del proyecto y los planes de pruebas de rendimiento. \\ 
+\hline H3 & Programador & Se encargará de implementar los módulos diseñados, y de llevar a cabo las pruebas de validación y de rendimiento previstas. \\ 
+\hline H4 & Administrativo & Se encargará de la documentación del proyecto, y de resolver las cuestiones burocráticas y administrativas.\\ 
+\hline
+\end{tabular}
+\end{center}
+
+\section{Resumen del proyecto}
+En esta sección se presenta el resumen del Plan de Trabajo y Presupuesto para la elaboración del proyecto Diseño e implementación de un sensor a nivel de kernel para el análisis de tráfico en redes de alta velocidad.
+
+\subsection{Plan de trabajo}
+En este apartado se definen los paquetes de trabajo que se van a seguir en la realización del proyecto. Cada paquete de trabajo se desglosa en las tareas que se han de realizar para su consecución. Se indicarán, asimismo, las unidades de entrega correspondientes a cada paquete de trabajo o tarea.
+
+\begin{description}
+\item [PT1] Estudio de las necesidades del sistema.
+\begin{description}
+\item [UE1] Definición de las especificaciones
+\begin{description}
+\item [T.101] Estudio de proyectos relacionados.
+\item [T.102] Definición de las especificaciones.
+\end{description}
+\end{description}
+\item [PT2] Estudio de alternativas.
+\begin{description}
+\item [UE2] Estudio de las alternativas de diseño
+\begin{description}
+\item [T.201] Estudio de mecanismos de comunicación con el espacio de usuario.
+\item [T.202] Estudio de las metodologías de programación en el kernel.
+\end{description}
+\end{description}
+\item [PT3] Diseño de los módulos del proyecto.
+\begin{description}
+\item [UE3] Rediseño de los componentes del sistema
+\begin{description}
+\item [T.301] Rediseño del módulo de captura.
+\item [T.302] Rediseño del módulo de procesamiento.
+\item [T.303] Rediseño del driver.
+\item [T.304] Diseño del módulo de estadísticas.
+\item [T.305] Diseño del módulo de traceo.
+\item [T.306] Diseño de la jerarquía de integración.
+\end{description}
+\end{description}
+\item [PT4] Desarrollo de los módulos del proyecto.
+\begin{description}
+\item [UE4] Desarrollo y depuración de los módulos del proyecto
+\begin{description}
+\item [T.401] Programación y pruebas del módulo de captura.
+\item [T.402] Programación y pruebas del módulo de procesamiento.
+\item [T.403] Programación y pruebas del driver.
+\item [T.404] Programación y pruebas del módulo de estadísticas.
+\item [T.405] Programación y pruebas del módulo de traceo.
+\item [T.406] Programación y pruebas de la jerarquía de integración.
+\end{description}
+\end{description}
+\item [PT5] Integración de los módulos, pruebas de validación y de rendimiento.
+\begin{description}
+\item [T.501] Integración de los módulos del proyecto.
+\begin{description}
+\item [UE501] Integración de los componentes de la sonda.
+\end{description}
+\item [T.502] Pruebas de validación y estabilidad del sistema.
+\begin{description}
+\item [UE502] Pruebas de validación del prototipo.
+\end{description}
+\item [T.503] Pruebas comparativas de rendimiento.
+\begin{description}
+\item [UE503] Pruebas comparativas de rendimiento
+\end{description}
+\end{description}
+\item [PT6] Gestión del proyecto.
+\begin{description}
+\item [UE6] Documentación final del proyecto.
+\begin{description}
+\item [T.601] Tareas de gestión.
+\item [T.602] Documentación.
+\end{description}
+\end{description}
+\end{description}
+
+
+\subsection{Presupuesto}
+En este apartado, se mostrará el resumen del presupuesto correspondiente al plan de trabajo de la sección anterior. Un presupuesto más detallado se puede encontrar en el documento anexo Plan de Trabajo y Presupuesto del Estudio de Viabilidad.
+
+El presupuesto está desglosado en presupuestos parciales de recursos humanos y recursos materiales. En la siguiente tabla se condensa toda la información relativa al presupuesto. Se le añade un 2\% para posibles imprevistos que puedan surgir a lo largo de la ejecución, y al ser un proyecto interno no se le añade el IVA:
+
+\begin{center}
+\rowcolors{2}{gray}{white}
+\begin{tabular}{|c|c|}
+\hline CONCEPTO & COSTE TOTAL\\
+\hiderowcolors
+\hline Total recursos humanos & 50.240,00 \euro \\
+\hline Total recursos materiales & 1.402,01 \euro \\
+\hline Total parcial & 51.642,01 \euro \\
+\hline Imprevistos (2\%) & 1.032,84 \euro \\
+\hline Presupuesto Total & 52.674,85 \euro \\
+\hline
+\end{tabular}
+\end{center}
+El coste para el proyecto \textit{Adaptación y extensión de la herramienta de captura y análisis de tráfico Ksensor} asciende a una cantidad total de cincuenta y dos mil seiscientos setenta y cuatro euros y ochenta y cinco céntimos.

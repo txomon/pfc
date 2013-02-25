@@ -87,7 +87,7 @@ Suele tener problemas de configuración de permisos de accesos, ya que todos los 
 Algunos otros problemas son la necesidad de atomicidad del repositorio, que implica una indisponibilidad del repositorio durante su uso por otros desarrolladores, o la forma de manejar las colisiones de código, que crean $3+n$ ficheros por colisión $n$.
 
 \paragraph{Git}
-Este es un SCVD se caracteriza por una total adaptación al estilo de trabajo de los grupos de programadores. Como SCVD, tiene características de innerentes a ello, como son el hecho de que cada repositorio es independiente, posibilitando al desarrollador guardar su trabajo \textit{offline}. También tiene facilidades para llevar un control de la sincronización con otros repositorios.
+Este es un SCVD se caracteriza por una total adaptación al estilo de trabajo de los grupos de programadores. Como SCVD, tiene características de inerentes a ello, como son el hecho de que cada repositorio es independiente, posibilitando al desarrollador guardar su trabajo \textit{offline}. También tiene facilidades para llevar un control de la sincronización con otros repositorios.
 
 Como es distribuido, no hay una versión servidora y una cliente, son todos iguales. La base de datos es local, y está integrada junto al resto de los datos del repositorio. El diseño de Git es relativamente reciente, y se diseño de manera que sirviera para el desarrollo de kernel, los mismos que desarrollan Linux.
 
@@ -96,6 +96,7 @@ Está diseñado con la integridad como factor principal. Todos las cosas se guarda
 El método de desarrollo para el que está diseñado permite que un desarrollador pueda basar su trabajo en el trabajo que se hace en un repositorio oficial, y tener sus propias ramas de desarrollo con integración continua.
 
 \subsubsection{Criterio de la selección}
+\label{scv-criterios}
 Para elegir correctamente el SCV que se va a utilizar, se tomarán los siguientes criterios en cuenta.
 
 \begin{description}
@@ -104,5 +105,56 @@ Uno de los principales problemas del desarrollo de un proyecto de kernel es todo
 
 La inversión de tiempo en la adaptación a un nuevo sistema de control de versiones puede no ser la mejor opción, ya que puede no interesar dependiendo de la longitud del proyecto. En este caso, la inversión en tiempo puede merecer la pena.
 
-\item[{Flexibilidad [20\%]}]
+\item[{Uso en proyectos similares [20\%]}]
+Es importante ver las herramientas que utilizan el resto de proyectos similares, basados en kernel, para su desarrollo. Estos proyectos suelen tener en común la mayor parte de las herramientas utilizadas, al ser un ámbito de desarrollo tan específico.
+
+\item[{Flexibilidad [30\%]}]
+Un elemento más importante que el uso y aprendizaje, que se pueden amortizar con el tiempo, es la posibilidad de que la citada herramienta provea de flexibilidad a la hora de trabajar. Uno de los principales hechos en el desarrollo de código, es la posibilidad de hacer las cosas de diferentes maneras, y un sistema que facilite el desarrollo de las nuevas ideas es algo muy positivo para este tipo de proyectos.
+
+Además, el sistema también tiene que facilitar al máximos el desarrollo paralelo, y el concepto de Integración Continua (\textit{CI: Continuous integration}), ya que como el proyecto oficial del kernel de Linux está en continuo desarrollo y se modifican más de 500 líneas de código al día, es importante que el proyecto no quede desactualizado, para evitar tener que hacer otro proyecto que incluya unas modificaciones tan severas en el código.
+
+\item[{Control de cambios [40\%]}]
+La característica más importante y a la que se le ha dado un mayor peso, es a la posibilidad de saber exactamente cuales son los cambios de una versión a otra, quien ha hecho determinados cambios, y sobre todo, la posibilidad de saber quien ha introducido qué cambios y con qué objetivo.
+
+Hay muchas veces en las que los desarrolladores de kernel no documentan los cambios en las líneas de código a través de comentarios, si no que comentan los cambios en los mensajes que se hacen al guardar. El acceso a la información que proporcionan los desarrolladores de esa manera es clave para la actualización del proyecto.
+
 \end{description}
+
+\subsubsection{Selección de la solución}
+El sistema de control de versiones que mejor se ajusta a los requerimientos del proyecto es \textit{Git}, tal y como se puede observar en la siguiente tabla.
+\begin{center}
+\rowcolors{1}{gray}{white}
+\begin{tabular}{|c|c|c|c|}
+\hline Criterio & Ponderación & Subversion & Git \\ 
+\hiderowcolors
+\hline Uso y aprendizaje & 10\% & 10/10 & 0/10 \\ 
+\hline Uso en proyectos similares & 20\% & 1/20 & 20/20 \\ 
+\hline Flexibilidad & 30\% & 10/30 & 30/30 \\ 
+\hline Control de cambios & 40\% & 20/40 & 40/40 \\ 
+\hline Total & 100\% & 51/100 & 90/100 \\ 
+\hline 
+\end{tabular}
+\end{center}
+
+En este proyecto se ha considerado que aún cuando Subversion es más fácil de utilizar, el hecho de que todos los proyectos centrados alrededor del desarrollo de kernel hayan utilizado Git hace que se pondere en positivo el esfuerzo requerido de aprendizaje.
+
+Además, las facilidades de git para el control de cambios, permiten ponerse en contacto fácilmente con el desarrollador que ha participado en el código.
+
+\subsection{Método de trabajo y liberación de código}
+En esta sección se va a estructurar, ya que es uno de los objetivos del proyecto, la manera en la que se van a guardar las modificaciones de código y la forma en la que se va a organizar el trabajo del proyecto.
+
+La manera de organizar esta sección será diferente a la seguida en otras ocasiones, ya que se organizará como una explicación de los métodos de trabajo, y las formas de ponerlos en práctica.
+
+\subsubsection{Arquitectura del SCVD Git}
+Actualmente el repositorio del proyecto se compone por un fichero de parche al kernel, que hay que aplicar y volver a crear cuando se ha seguido el desarrollo, para guardarlo dentro del SCV. Además, en este repositorio se guarda el código del módulo de kernel en el que está contenido todo lo que no es estrictamente necesario de tener en el parche.
+
+Aunque este método de trabajo esté bien, las posibilidades que se abren al utilizar un sistema de control de versiones como Git es que se puede tener un rama de desarrollo dependiente de kernel, y otra paralela en el que se haga todo el desarrollo de una forma independiente, pero con posibilidad de ir integrando el trabajo.
+
+El nuevo sistema, se puede permitir la integración completa en el árbol de código de kernel, siendo de esta manera la más apropiada en caso de que se libere el código.
+
+\subsubsection{Integración del código en el árbol de Linux}
+Actualmente la manera de conseguir hacer funcionar la aplicación ksensor en el árbol de kernel es a través de la aplicación del parche, y posterior compilación del kernel. Una vez parcheado, no hay una manera de no compilar esa parte.
+
+Esta forma de trabajar complica la posibilidad de desarrollar utilidades complementarias pero independientes, pues no se puede discernir entre lo que pertenece al árbol del kernel y lo que no.
+
+Para facilitar el desarrollo, se optará por integrar todo lo posible el trabajo llevado en el grupo de investigación NQAS en el árbol de kernel, para evitar tener que mantener la sincronización entre distintas versiones del código. Por ello, se integrará todo el código en el repositorio.
