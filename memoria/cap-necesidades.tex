@@ -65,7 +65,7 @@ El escenario en el que se realizarán las pruebas será similar al descrito en la 
 
 Puesto que la finalidad principal de estas pruebas es obtener las características de rendimiento de las sondas, lo más interesante es comprobar el throughput de los mismos cuando se satura el enlace. Antes, se utilizaban varias máquinas para saturar el enlace, ya que es muy difícil que un sistema operativo convencional pueda generar tal volumen de tráfico.
 
-Ahora, se dispone de inyectores hardware \cite{DAPR07} que tienen la capacidad de saturar un enlace a 1Gbps. Este tipo de inyectores no requieren otros equipos, por lo que se podría utilizar un enlace directo. En la arquitectura anterior se utilizaba un switch como forma de agregar tráfico ethernet, pero se ha decidido no suprimir el switch para poder seguir disponiendo de unas estadísticas externas.
+Ahora, se dispone de inyectores hardware \cite{DAPR10} que tienen la capacidad de saturar un enlace a 1Gbps. Este tipo de inyectores no requieren otros equipos, por lo que se podría utilizar un enlace directo. En la arquitectura anterior se utilizaba un switch como forma de agregar tráfico ethernet, pero se ha decidido no suprimir el switch para poder seguir disponiendo de unas estadísticas externas.
 
 Así pues, en esta configuración se conectarán dos máquinas al switch: una para el sensor y una inyectora. En cierto modo, el inyector es el propio switch, por lo que en las pruebas de rendimiento será necesario obtener también las estadísticas relativas a éste, por llevar una contabilidad exacta por un medio externo.
 
