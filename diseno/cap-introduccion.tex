@@ -1,0 +1,13 @@
+\chapter{Introducción}
+
+En este documento se describe el diseño de alto nivel de la nueva implementación de Ksensor. Primero se comenzará por la descripción de la arquitectura general, posteriormente se explicará la arquitectura de Ksensor y a continuación se explicarán los diferentes módulos que se van a añadir al proyecto. Finalmente, se explicarán la manera de integrar todos estos módulos como se ha descrito en el análisis de alternativas, dentro del SCVD Git, para acabar explicando la arquitectura del entorno de pruebas.
+
+En primer lugar debe aclararse el alcance y los objetivos fijados para la realización de este proyecto. La finalidad de este proyecto es la \textit{Adaptación y extensión de la herramienta de captura y análisis de tráfico Ksensor}.
+
+Al mencionar la adaptación nos referimos a la migración o actualización de la herramienta a una versión del kernel de Linux actual. Es importante remarcar que no se trata de rediseñar Ksensor al completo, sino más bien, hacer los cambios en el diseño necesarios para su posible puesta en marcha en un kernel Linux actual. También se pretende enfatizar que se quiere integrar todo el desarrollo de una manera uniforme y estándar en un repositorio paralelo al oficial.
+
+En lo referente a extensión, se pretende ampliar no tanto la herramienta, si no lo dispuesto alrededor de la misma, para su validación. Se pretende mejorar Ksensor modelando de forma teórica el sistema para señalar posibles cuellos de botella. Para ello, por ejemplo, se deben sacar estadísticas del número de interrupciones que ocurren durante un período, relacionándolo con la tasa de saturación de la red. Para conseguir todas estas mediciones, se pretende dotar al kernel de Linux de unos módulos ligeros, suponiendo ligero todo aquel módulo que no introduzca una carga de procesamiento importante en el sistema, que se encarguen de sacar los números.
+
+Por lo tanto, el orden que se va a seguir es la descripción de la arquitectura general del sistema, seguidamente el módulo Ksensor y los módulos de traceo y estadísticas, para acabar explicando la manera en la que se pretende integrar todo el trabajo de una manera uniforme.
+
+Este documento pretende describir los módulos explicando sus interfaces y funcionamiento, así como las decisiones que se han tomado en su diseño. Para una descripción más detallada se puede acudir al documento de \textit{Diseño de bajo nivel}.

@@ -1,0 +1,67 @@
+% !TeX spellcheck = es_ES
+
+\title{Adaptación y extensión de la herramienta de captura y análisis de tráfico Ksensor\\Diseño de alto nivel}
+\author{Javier Domingo Cansino}
+
+\documentclass[11pt,a4paper]{report} % Para tener un documento grande pero sin ser un libro (solo hay esta posibilidad)
+\usepackage[latin1]{inputenc}   % Para la codificación
+\usepackage{textcomp}           % Para los simbolos de euro
+\usepackage[spanish]{babel}     % Para el lenguaje que tenga bien
+\usepackage[T1]{fontenc}        %      los saltos de linea con guión etc.
+\bibliographystyle{alpha}       % Estilo de bibliografía
+\usepackage{graphicx}           % Para insertar imágenes
+\graphicspath{{../images/}}     % La ruta relativa de las imágenes
+\usepackage{hyperref}           % Hacer links guays entre secciones y hacia fuera
+\usepackage[hypcap]{caption}    % Hacer que las referencias se vean, y no se queden por encima (referenciando imagenes, etc.)
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	citecolor=red,
+}
+\usepackage[table]{xcolor}      % Dar colores a las tablas
+\usepackage{eurosym}            % para tener el simbolo del euro
+\usepackage{setspace}           % Para hacer el espaciado entre líneas
+\setstretch{1.4}                %      1.4 del espacio normal
+\usepackage{parskip}            % El espaciado entre parrafos 
+\setlength{\parindent}{25pt}    %      lo ponemos a 25pt
+\usepackage[margin=3cm]{geometry} % Cambiar el margen del texto
+
+\usepackage{fancyhdr}           % Cambiar las cabeceras del documento
+\pagestyle{fancy}               %      y usar los cambios
+\lhead{\includegraphics[width=5cm]{ingenieros-bilbao}}
+\rhead{Adaptación y extensión de la herramienta\\ de captura y análisis de tráfico Ksensor}
+\cfoot{\thepage}
+\setlength{\headheight}{47pt}
+
+\usepackage{titlesec}           % cambiar el estilo soso de los capítulos
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter. }{0pt}{\Huge\bfseries}
+\usepackage{makeidx}            % Hacer índices
+
+% % % % % % % % % % % % % % % % % % % % % % %
+% Sección de comandos personalizados        %
+% % % % % % % % % % % % % % % % % % % % % % %
+\newcommand{\reference}[2]{\hyperref[#1]{\textit{\ref*{#1} #2}}}
+\makeindex
+
+\begin{document}
+\pagenumbering{Roman}
+\maketitle % Crear el título
+\tableofcontents % Crear la tabla de contenidos
+
+\pagenumbering{arabic}
+
+\include{cap-introduccion}
+\include{cap-general}
+\include{cap-ksensor}
+\include{cap-traceo}
+\include{cap-estadisticas}
+\include{cap-integracion}
+\include{cap-entorno-de-pruebas}
+
+\pagenumbering{Roman}
+
+\bibliography{../bibliography}
+
+\printindex
+
+\end{document}

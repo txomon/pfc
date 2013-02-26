@@ -1,0 +1,36 @@
+\chapter{Arquitectura general}
+
+En este capítulo se describe la arquitectura general del sistema propuesto en el presente proyecto. Como el diseño anterior se ha considerado válido en el entorno de pruebas, además obteniendo muy buenos resultados, en esta sección se explicarán los cambios puntuales que serán necesarios para hacer que el anterior diseño siga funcionando.
+
+Este diseño, además contemplará los módulos complementarios creados en este proyecto y la organización de los mismos.
+
+\section{Arquitectura en espacio de kernel}
+Una de las primeras decisiones de diseño que hay que hacer es la elección de la versión a la que se va a migrar. Según lo que se ha analizado, la interfaz hacia los módulos y drivers de kernel se ha mantenido de la misma forma, permitiendo así que el trabajo de migración para Ksensor se integre de una forma sencilla.
+
+El principal problema de la migración de Ksensor son las funciones específicas que se han implementado para su correcto funcionamiento, las cuales utilizan estructuras internas normalmente no visibles para los módulos, lo que hace que sean incompatibles.
+
+A continuación, se intentarán explicar las diferencias conceptuales entre el kernel 2.6.15 y 3.6 en los puntos relevantes para nuestra implementación:
+\begin{itemize}
+\item Estrategia de captura de paquetes
+\end{itemize}
+
+\subsection{Estrategia de captura de paquetes}
+Existen diferentes estrategias para capturar el tráfico de red, cada cual con sus
+ventajas e inconvenientes:
+
+\begin{description}
+\item [Captura basada en interrupciones]
+Este mecanismo es el más sencillo, pero también el más ineficiente. Cada vez que llega un paquete a la tarjeta de red, ésta genera una interrupción y se ejecuta la rutina de atención correspondiente. En esta rutina se captura el paquete y se encola para un posterior procesamiento por parte del subsistema de red del kernel. Este proceso se repite con cada paquete que llega a la tarjeta.
+
+La mayor ventaja de este mecanismo es la baja latencia con la que se reciben los paquetes. Sin embargo, tiene un grave inconveniente. A medida que la frecuencia de llegada de paquetes al sistema crece, se consumen cada vez más recursos de la CPU para atender las interrupciones que se generan. Si el ratio de llegada crece aún más, la captura de paquetes puede llegar a monopolizar la CPU, impidiendo que se ejecute cualquier otra tarea y llegando a lo que en \cite{JMKR96} se denominó como livelock.
+
+\item[Captura basada en polling]
+Para evitar los livelocks se pueden emplear mecanismos de polling, es decir, se pregunta periódicamente a la tarjeta si ha llegado algún paquete, en cuyo caso se capturan todos los que hayan llegado hasta ese momento. De este modo, aún si la tasa de llegada de los paquetes es muy alta, el sistema operativo podrá controlar el consumo computacional que se dedica al proceso de captura. Sin embargo, esta estrategia también presenta algunos inconvenientes, ya que si la tasa de llegada es baja, se estará interrogando a la tarjeta de red a pesar de que no haya llegado ningún paquete, consumiendo recursos de forma innecesaria. Además, la latencia con la que se reciben los paquetes es mayor.
+
+\item[Captura mixta]
+Dadas las ventajas e inconvenientes de las técnicas anteriores, en \cite{JMKR96} se propuso un mecanismo mixto en el que se trataba de evitar los livelock a la vez que se reducía el consumo innecesario debido al polling. Para ello, utilizó una técnica llamada coalescencia de interrupciones.
+
+Cuando llega el primer paquete, se produce una interrupción hardware y se ejecuta la rutina de atención correspondiente a esa interrupción. En esta rutina se notifica al sistema acerca de la llegada de nuevos paquetes que necesitan ser recogidos, y a continuación se deshabilitan las interrupciones. Cuando el sistema lo considere oportuno, se ejecutará la tarea del kernel encargada de la recepción de paquetes, que hará un polling sobre la tarjeta de red mientras sigan llegando paquetes.
+
+Finalmente, se vuelven a habilitar las interrupciones. De esta manera, si la tasa de llegada es baja, el sistema se comporta como un sistema basado en interrupciones, y si aumenta, se capturan más paquetes por interrupción, asemejándose a un sistema basado en polling.
+\end{description}
