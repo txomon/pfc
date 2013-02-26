@@ -6,3 +6,8 @@ main.ps
 *.gz
 *.aux
 *.dvi
+*.idx
+*.out
+*.pdf
+*.ps
+*.toc
