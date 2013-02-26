@@ -15,8 +15,7 @@ A continuación, se intentarán explicar las diferencias conceptuales entre el ker
 \end{itemize}
 
 \subsection{Estrategia de captura de paquetes}
-Existen diferentes estrategias para capturar el tráfico de red, cada cual con sus
-ventajas e inconvenientes:
+Existen diferentes estrategias para capturar el tráfico de red, cada cual con sus ventajas e inconvenientes, que serán relevantes para explicar el problema que hay a la hora de intentar que un :
 
 \begin{description}
 \item [Captura basada en interrupciones]
@@ -34,3 +33,11 @@ Cuando llega el primer paquete, se produce una interrupción hardware y se ejecut
 
 Finalmente, se vuelven a habilitar las interrupciones. De esta manera, si la tasa de llegada es baja, el sistema se comporta como un sistema basado en interrupciones, y si aumenta, se capturan más paquetes por interrupción, asemejándose a un sistema basado en polling.
 \end{description}
+
+
+
+La implementación anterior, si bien entendía como necesaria el uso del sistema descrito en \cite{JMKR96}, había integrado esa lógica dentro del resto de la estructura encargada de la administración de la tarjeta de red.
+
+Con el paso de los años, desde 2005, empezaron a salir las tarjetas con varias interfaces de red, y como cabía la posibilidad de que solo se hubieran recibido paquetes en una de ellas, se decidió separar de una manera virtual estas tarjetas. Con el paso de los años, se empezó a separar de manera lógica la gestión del interfaz físico persé y la administración de los interfaces virtuales.
+
+Por ese motivo, ahora que ya está totalmente separado uno del otro, el diseño de Ksensor se debe adaptar a la lógica del kernel de captura de paquetes.
