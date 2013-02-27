@@ -1,7 +1,6 @@
 *.log
 *.b??
-main.pdf
-main.ps
+!*.bib
 *.log
 *.gz
 *.aux
