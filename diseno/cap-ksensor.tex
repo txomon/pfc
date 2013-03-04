@@ -1,0 +1,60 @@
+\chapter{Arquitectura de Ksensor}
+El diseño actual de Ksensor debe ser adaptado para utilizar la nueva manera de gestionar la captura del kernel de Linux. Este diseño comprende principalmente modificaciones en el diseño de bajo nivel, por lo que se dejará para el documento que compete.
+
+Ya se han explicado los cambios del sistema en la anterior interfaz, por lo que aquí se mencionarán las funcionalidades específicas que utilizaban la interfaz antigua a reemplazar.
+
+\section{Necesidades}
+
+Las funcionalidades que Ksensor necesita del kernel se han dividido por las zonas a las que pertenecen del sistema. Tanto como conceptualmente pueden ser parecidas, se separan para que en el diseño de bajo nivel se entiendan de donde viene cada uno de los nuevos diseños.
+
+\subsection{Tener lista de interfaces de captura.}
+
+El sistema Ksensor debe ser utilizado únicamente para los paquetes que se capturen desde las interfaces configuradas para tal efecto, y como tal, el sistema debe tener una lista de las interfaces a las que debe controlar.
+
+La interfaz interna para la gestión de listas no ha cambiado, ya que como se mencionaba antes, durante el desarrollo del kernel, se ha intentado dejar el interfaz hacia los módulos lo más inmutable posible. En ese aspecto la funcionalidad requerida tiene la misma forma de acceso.
+
+\subsection{Discriminar paquetes por interfaz}
+
+En la implementación anterior, la funcionalidad utilizaba una referencia interna del paquete hacia la interfaz. En este caso, con los cambios en el tratamiento de paquetes, debemos tener en cuenta que ahora las entradas en el sistema son virtuales y que las interfaces de red no son representadas de la misma manera.
+
+Ahora las interfaces físicas han dejado de ser gestionadas en el polling, y se gestionan las bocas o colas de entrada de las que disponga la tarjeta. El rendimiento de captura se verá afectado por lo tanto por las interrupciones de la tarjeta, y no por las recepciones en una sola interfaz.
+
+Ksensor debe ser por lo tanto pensado para gestionar todos los paquetes que lleguen a una tarjeta de red, ya que no se puede aplicar un control de flujo efectivo a solo una interfaz. De todos modos, aunque se gestione una NIC entera, se puede elegir de cual(es) se procesarán los paquetes, aunque el resto de interfaces de la tarjeta no se puede asegurar tengan el procesado necesario.
+
+\subsection{Establecer la afinidad entre interfaces y procesadores.}
+
+Antes, como las tarjetas tenían un único interfaz, no había mayores dificultades con esta necesidad. Ahora se deben gestionar las interfaces dependiendo de a qué tarjeta pertenezcan. También ha cambiado el método para establecer la afinidad en sistemas multiprocesamiento, y habrá que adaptar las llamadas correspondientes para ello.
+
+\subsection{Activar o desactivar la captura de paquetes en el sistema.}
+
+Al haber separado la captura de la gestión de la interfaz, el único método para desactivar la captura de una interfaz es la de desactivarla para toda la tarjeta de red. Por lo tanto se debe volver a adaptar la manera en la que ksensor limita la captura de paquetes.
+
+
+\section{Mejoras}
+Aquí se mencionarán las mejoras de diseño que se han pensado para Ksensor, donde las modificaciones se justifican a través de los efectos vistos en las pruebas.
+
+\subsection{Control de congestión}
+
+Actualmente, el sistema de control de congestión es la opción de configuración que más rendimiento ofrece al sistema, se encarga de evitar la captura de más paquetes de los necesarios, y asegura un equilibrio entre la captura y el procesamiento.
+
+Este sistema funciona tal y como está descrito en el documento de diseño de alto nivel de \cite{KABO05}. El funcionamiento es simple, una vez la cola de captura de Ksensor se llena, este deja de capturar hasta que los procesos de análisis del mismo dejan la cola a la mitad de su capacidad. Desde ese momento, el proceso de captura se vuelve a activar, y vuelve a llenar la cola.
+
+Como se puede observar, la captura de paquetes variará en forma de diente de sierra, y podría ocasionar, que en caso de que el sistema se enfrentara a tasas de tráfico cerca de su saturación, dejara de capturar algunos paquetes por su llegada al máximo, y se perderían todos aquellos paquetes, que aún teniendo sitio después de la saturación, se perderían por este parámetro estático.
+
+La solución que se pretende adquirir en esta nueva implementación es que la cola esté el máximo tiempo posible en saturación, sin dejar de lado la eficacia. Una softirq, tiene como objetivo capturar un número máximo de paquetes definido, 300, en un máximo de tiempo, 2 \textit{jiffies}.
+
+El diseño que se va a seguir, va a dar resultado a gráficas en forma de diente de sierra, pero se van a distribuir las capturas para ir llenando la cola siempre que se llegue al nivel de $tama\check{n}o\ de\ cola- 300$. Este cambio de diseño se espera justificar con pruebas contra el diseño alternativo.
+
+\subsection{Secciones críticas}
+
+Ksensor, al contrario de lo que se pensaba, no era tan óptimo como se pensaba en computadoras multinúcleo de gran potencia. Tras un análisis del código, se han podido identificar varios segmentos del mismo que tienen secciones críticas demasiado grandes, e incluso, secciones críticas que no son necesarias por el diseño del sistema.
+
+Uno de los mayores problemas que se ha podido discernir es la situación de bloqueo que se da en el acceso a la cola única de procesamiento de las arquitecturas multiprocesador, donde hay varias instancias que se quedan a la espera de conseguir acceso a la cola.
+
+Tanto como en el proyecto de Ksensor \cite{KABO05} hay un desarrollo argumentado muy completo de porqué utilizar una cola es lo óptimo, no se entra a debatir sobre la posibilidad de procesar paquetes en grupos, tal y como hace el nuevo método gro \ref{sec:gro}.
+
+Uno de los cambios de diseño propuestos para Ksensor es la asignación variable de cupos de paquetes. Una instancia, que por el motivo que fuera se queda bloqueada en el acceso a la cola, cogerá un paquete más cada vez que se quede bloqueado al intentar acceder a la cola.
+
+Es importante especificar que el diseño que se plantea no tiene como objetivo que un hilo de Ksensor acabe cogiendo cada vez más paquetes, por ello debe distinguirse entre que aumente el tiempo de bloqueo porque no hay paquetes y porque haya otras instancias intentando acceder.
+
+

@@ -8,6 +8,6 @@ Al mencionar la adaptación nos referimos a la migración o actualización de la he
 
 En lo referente a extensión, se pretende ampliar no tanto la herramienta, si no lo dispuesto alrededor de la misma, para su validación. Se pretende mejorar Ksensor modelando de forma teórica el sistema para señalar posibles cuellos de botella. Para ello, por ejemplo, se deben sacar estadísticas del número de interrupciones que ocurren durante un período, relacionándolo con la tasa de saturación de la red. Para conseguir todas estas mediciones, se pretende dotar al kernel de Linux de unos módulos ligeros, suponiendo ligero todo aquel módulo que no introduzca una carga de procesamiento importante en el sistema, que se encarguen de sacar los números.
 
-Por lo tanto, el orden que se va a seguir es la descripción de la arquitectura general del sistema, seguidamente el módulo Ksensor y los módulos de traceo y estadísticas, para acabar explicando la manera en la que se pretende integrar todo el trabajo de una manera uniforme.
+Por lo tanto, el orden que se va a seguir es la descripción de la arquitectura general del sistema a emplear, el kernel de Linux, seguidamente el módulo Ksensor y los módulos de traceo y estadísticas, para acabar explicando la manera en la que se pretende integrar todo el trabajo de una manera uniforme.
 
 Este documento pretende describir los módulos explicando sus interfaces y funcionamiento, así como las decisiones que se han tomado en su diseño. Para una descripción más detallada se puede acudir al documento de \textit{Diseño de bajo nivel}.

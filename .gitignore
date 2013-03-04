@@ -10,3 +10,5 @@
 *.pdf
 *.ps
 *.toc
+*.ilg
+*.ind

@@ -1,21 +1,22 @@
 \chapter{Arquitectura general}
 
-En este capítulo se describe la arquitectura general del sistema propuesto en el presente proyecto. Como el diseño anterior se ha considerado válido en el entorno de pruebas, además obteniendo muy buenos resultados, en esta sección se explicarán los cambios puntuales que serán necesarios para hacer que el anterior diseño siga funcionando.
+En este capítulo se describe la arquitectura general del kernel de Linux que se va a utilizar en el presente proyecto. Como el diseño anterior se ha considerado válido en el entorno de pruebas, obteniendo muy buenos resultados de rendimiento, en esta sección se explicarán los cambios que serán tenidos en cuenta para hacer que el anterior diseño siga funcionando.
 
-Este diseño, además contemplará los módulos complementarios creados en este proyecto y la organización de los mismos.
-
-\section{Arquitectura en espacio de kernel}
 Una de las primeras decisiones de diseño que hay que hacer es la elección de la versión a la que se va a migrar. Según lo que se ha analizado, la interfaz hacia los módulos y drivers de kernel se ha mantenido de la misma forma, permitiendo así que el trabajo de migración para Ksensor se integre de una forma sencilla.
 
 El principal problema de la migración de Ksensor son las funciones específicas que se han implementado para su correcto funcionamiento, las cuales utilizan estructuras internas normalmente no visibles para los módulos, lo que hace que sean incompatibles.
 
-A continuación, se intentarán explicar las diferencias conceptuales entre el kernel 2.6.15 y 3.6 en los puntos relevantes para nuestra implementación:
-\begin{itemize}
-\item Estrategia de captura de paquetes
-\end{itemize}
+A continuación, se intentarán explicar las diferencias conceptuales entre el kernel 2.6.15 y 3.6 en los puntos relevantes para nuestra implementación, además de explicaciones de los diseños que se han tomado en el kernel oficial.
 
-\subsection{Estrategia de captura de paquetes}
-Existen diferentes estrategias para capturar el tráfico de red, cada cual con sus ventajas e inconvenientes, que serán relevantes para explicar el problema que hay a la hora de intentar que un :
+\section{Estrategia de captura de paquetes}
+Existen diferentes estrategias para capturar el tráfico de red, cada cual con sus ventajas e inconvenientes, que serán relevantes para explicar las razones por las que esta parte necesita un rediseño, se empezará desde el nivel más cercano a la red, explicando como se tratan las interrupciones y a continuación se explicará como se tratan los paquetes capturados.
+
+\subsection{Tratamiento de interrupciones para la captura de tráfico}
+La captura de paquetes es una operación de gran delicadeza en el entorno en el que trabajará este proyecto. En primer lugar es necesario entender que la captura de paquetes la hace una NIC (Network Interface Controller), y a través de una interrupción hardware avisa al sistema operativo que tiene paquetes para ser recogidos de su memoria interna.
+
+El sistema por lo tanto, recoge los paquetes, y la NIC vuelve a disponer de ese espacio para la recepción de más paquetes. El problema está en que si el sistema no es lo suficiente rápido, la tarjeta podría quedarse sin memoria interna libre para la recepción de más datos de red, y acabaría rechazando paquetes hasta que el sistema liberara su memoria.
+
+A continuación se describirán los diferentes métodos que hay para la adquisición de paquetes de la tarjeta de red.
 
 \begin{description}
 \item [Captura basada en interrupciones]
@@ -34,10 +35,52 @@ Cuando llega el primer paquete, se produce una interrupción hardware y se ejecut
 Finalmente, se vuelven a habilitar las interrupciones. De esta manera, si la tasa de llegada es baja, el sistema se comporta como un sistema basado en interrupciones, y si aumenta, se capturan más paquetes por interrupción, asemejándose a un sistema basado en polling.
 \end{description}
 
+La implementación actual y la de Ksensor anterior es utilizan el concepto de la captura mixta. Por el contrario, ha habido un cambio que ha durado alrededor de 5 años (2004-2005) y hace que durante las tres fases de la implementación, la lógica de decisión sobre a cuando hacer el polling, y el modo de gestionar las interfaces virtuales ha hecho que el punto de unión con Ksensor quede totalmente obsoleto.
 
+\subsection{Tratamiento de los paquetes capturados}
+Una vez se ha entendido como se capturan los paquetes, queda por explicar exactamente como se procesan. Lo primero a explicar para entender la estructura, es la manera en la que está diseñada las rutinas de servicio a la interrupción exactamente.
 
-La implementación anterior, si bien entendía como necesaria el uso del sistema descrito en \cite{JMKR96}, había integrado esa lógica dentro del resto de la estructura encargada de la administración de la tarjeta de red.
+A partir de ahora, y aunque estos términos no sean los correctos son específicos para la explicación, con hardirq nos referiremos a la RSI hardware que tiene el controlador de cualquier tarjeta de red, y softirq se referirá al proceso planificado desde la hardirq para hacer el trabajo que requiere atender correctamente las necesidades de la tarjeta.
 
-Con el paso de los años, desde 2005, empezaron a salir las tarjetas con varias interfaces de red, y como cabía la posibilidad de que solo se hubieran recibido paquetes en una de ellas, se decidió separar de una manera virtual estas tarjetas. Con el paso de los años, se empezó a separar de manera lógica la gestión del interfaz físico persé y la administración de los interfaces virtuales.
+La hardirq es una rutina muy corta que se encarga únicamente de planificar la softirq. En la softirq se debe dar cabida a todo el procesamiento que requiere la atención de la tarjeta, con un límite, que en caso de sobrepasarlo, deberá salir, y volver a ser planificado.
 
-Por ese motivo, ahora que ya está totalmente separado uno del otro, el diseño de Ksensor se debe adaptar a la lógica del kernel de captura de paquetes.
+La softirq tiene una lista de las interfaces a las que hacer poll, dependiendo de cuales hayan sido planificadas previamente. En la rutina, llama iterativamente a las funciones de poll de cada tarjeta, y esta función de poll se encarga de recoger cada paquete de la interfaz y pasárselo a una función que se encargará de procesar cada paquete por separado.
+
+\label{sec:gro}
+Un cambio importante que es digno de tener en consideración a la hora de justificar un mejor rendimiento del sistema en la captura, es el mecanismo GRO descrito en \cite{DAVE10}, que hace que lo explicado en el anterior párrafo no sea tan simple.
+
+Hasta antes de su implantación, el mecanismo de captura se basaba en la recepción de paquetes, y tras comprobar algunos parámetros de integridad del paquete, se introducía el paquete en la cola de análisis del sistema. Este mecanismo hace que los paquetes sean tratados de uno en uno.
+
+Por el contrario, con la nueva técnica, se crean una especie de super paquetes que se componen de todos los paquetes que tienen varios parámetros en común. De esta manera, se consigue fundir los datos de los niveles de protocolos más bajos ahorrando computación para después procesarlos como uno solo.
+
+\subsection{Administración del interfaz y sus colas de recepción}
+La implementación anterior, si bien entendía como necesaria el uso del sistema descrito en \cite{JMKR96}, había integrado esa lógica dentro del resto de la estructura encargada de la administración de la tarjeta de red. Lo cual hizo que con el paso de los años, cuando empezaron a salir las tarjetas con varias interfaces de red y una cola de recepción para cada una, donde cabía la posibilidad de que solo se hubieran recibido paquetes en una de ellas, se decidiera separar de una manera virtual estas colas.
+
+Por lo tanto, se empezó a separar de manera lógica la gestión del interfaz físico y la administración de las colas virtuales. Haciendo que por ese motivo, ahora que ya está totalmente separado uno del otro, el diseño de Ksensor se debe adaptar a la nueva lógica del kernel de captura de paquetes.
+
+\section{Métodos para enviar información al usuario}
+Una de las cosas importantes a la hora de plantear los módulos de estadística y traceo de ksensor son las interfaces hacia el espacio de usuario que se van a utilizar. A continuación se explicarán de una forma breve cuales son los diferentes sistemas que se utilizan en Linux, ya que aunque para sacar poca información está bien, para sacar mucha información es totalmente ineficaz.
+
+\begin{description}
+\item [Fichero virtual en proc]
+La forma más común de sacar información del kernel es a través de ficheros en el sistema de ficheros de \textit{/proc}, procfs. Es el sistema más sencillo, y es el que se utiliza para la mayoría de las transacciones para proveer información a los programas. Por ejemplo, todos los procesos que hay en el sistema junto se representan en una carpeta virtual en /proc/<pid>.
+
+De ahí, aplicaciones como \textit{ps}, \textit{top}, \textit{gnome-system-monitor}, etc. utilizan esta interfaz para informarse sobre los procesos existentes. Actualmente, Ksensor utiliza esa misma interfaz para sacar información de estadísticas internas e información varia, como las interfaces actuales de captura o el estado del mismo.
+
+El problema de esta implementación es que el fichero debe ser generado completamente cada vez que se requiere, lo cual es aceptable para ficheros cortos, pero impensable para, por ejemplo el módulo de traceo, que necesita tener ficheros virtuales de cientos de megas.
+
+\item [Fichero virtual con seq\_file]
+Esta implementación de fichero virtual permite recorrer de una manera iterativa una secuencia sin predefinir. Está pensada con una función inicializadora, una función para pasar al siguiente punto, una función para mostrar y una última función para terminar.
+
+Esta interfaz permite que se pueda crear el fichero bajo demanda, e incluso, se le instruya al kernel que solo genere las entradas específicas que se van a consultar.
+
+\item [Fichero físico]
+Una opción que es digna de mención por ser la opción más directa es guardar datos en ficheros físicos. Es una opción que tiene bastantes problemas de implementación, ya que al estar dentro del sistema operativo, tienes que tratar con una interfaz interna a ficheros.
+
+Por otra parte, esta solución sería adecuada en caso de requerir guardar ficheros de gran tamaño. Si bien es cierto que el disco duro tiene un acceso muy lento, es la única alternativa cuando el tamaño supera la memoria física del ordenador
+
+\end{description}
+
+A la hora de plantear la solución de este problema se plantea la decisión de dimensionamiento. El traceador está pensado para hacer medidas que requieren de ficheros grandes, y por lo tanto, la opción de utilizar un fichero físico es una opción, ya que no se requiere más de un acceso por \textit{inode} en caso de optimización del proceso.
+
+En este proyecto, se ha decidido utilizar la interfaz de seq\_file para una implementación que se espera sea suficiente. Actualmente, con las necesidades de guardar información, los archivos de salida de las pruebas de modelado se estima sean de 50000 líneas.
