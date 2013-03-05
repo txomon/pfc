@@ -2,16 +2,25 @@
 
 Este es un capítulo que tiene como objetivo explicar con un diseño muy superficial un trabajo que se ha desarrollado más en el diseño de bajo nivel, que no entra dentro del diseño de código, sino más bien en la línea de integración con los estándares oficiales que pretende seguir este proyecto.
 
-\section{Estándares de directorio}
+\section{Integración con estándares}
+
+En esta sección se describirán los diferentes estándares \textit{de-facto} con los que se quiere integrar todo el código de Ksensor y el asociado a este.
+
+\subsection{Estándares de directorio}
 
 Se pretende integrar Ksensor dentro de la estructura de directorios de una forma completa. Al igual que muchos otros drivers, o partes del kernel, esto se ha hecho creando una carpeta en el directorio que más razón de pertenecer tenía. La idea principal detrás de este directorio es introducir en esa parte todo lo desarrollado en el grupo de investigación NQaS para su posible liberación.
 
-\section{Estándar de código}
+\subsection{Estándar de código}
 
 Tanto como es importante la integración de los ficheros que se han desarrollado en NQaS, es importante acotar las modificaciones como está hecho en el resto del kernel. Se han acotados todas las inserciones por categorías o secciones, que permiten compilar ciertas funcionalidades, y otras no.
 
 Todo esto debe ser asimismo configurable para facilitar el uso de las aplicaciones, por ello, se ha integrado todo en una categoría que permite su total desactivación, NQAS dentro de la sección de red, y dentro se han dividido las aplicación Ksensor de los módulos auxiliares para validarlo, y dentro de la aplicación Ksensor se pueden elegir opciones de depuración y estadísticas.
 
-Es muy importante que el diseño en esta parte concuerde con el código y con la lógica de la aplicación, ya que dejar algún trozo suelto podría ser fatal y haría que fallara la compilación. En el plan de pruebas se especificará como comprobar que el diseño de esta sección ha sido correctamente implementado.
+Es muy importante que el diseño en esta parte concuerde con el código y con la lógica de la aplicación, ya que dejar algún trozo suelto podría ser fatal y haría que fallara la compilación. En el plan de pruebas se especificará como comprobar que el diseño de esta integración con el estándar de código ha sido correctamente implementado.
 
-\section{Estándar de }
+
+\section{Integración en el repositorio}
+
+Uno de los problemas a los que se enfrentaba Ksensor en caso de liberación era que no utilizaba los métodos de desarrollo de kernel, ahora que se ha integrado en el árbol de kernel como cualquier otro componente, se tiene que integrar de una manera constantemente actualizada esta versión en el repositorio.
+
+En caso de liberar el código, se ha creado una rama de desarrollo paralela a la master de kernel, partiendo de la versión 3.6, que está lista para su uso con un sistema de Integración Continua (CI).

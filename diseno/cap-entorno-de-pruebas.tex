@@ -1,0 +1,70 @@
+\chapter{Entorno de pruebas}
+En este capítulo se presenta el entorno de pruebas de Ksensor, en el cual se han llevado a cabo las pruebas de rendimiento que permitieron evaluar la mejora de prestaciones obtenida con la adaptación Ksensor.
+
+La idea de esta sección es introducir los conceptos de alto nivel que se han utilizado en el proyecto anterior, y sobre las cuales se crearán nuevas herramientas para la integración de los nuevos módulos en el entorno de pruebas.
+
+Así pues, primeramente se presentará la arquitectura de pruebas existente y a continuación, se describirán todos los elementos nuevos que la componen, tanto los creados en otros proyectos \cite{DAPR10}, como los creados en este proyecto con objetivo de integrar las nuevas partes del sistema. En el documento de Diseño de Bajo Nivel se podrá consultar una información más detallada .
+
+\section{Arquitectura de pruebas}
+La arquitectura de pruebas del sensor se basa en la plataforma genérica para la automatización de pruebas diseñada en \cite{AABS05}, la cual permite, como su propio nombre indica, lanzar baterías de pruebas, configurando de forma automatizada todos los agentes o elementos que participan en la misma. La arquitectura de pruebas de Ksensor se ilustra en la figura \reference{fig:arquitectura-de-pruebas}{Arquitectura de pruebas}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{arquitectura-de-pruebas}
+\caption{Arquitectura para la automatización de pruebas}
+\label{fig:arquitectura-de-pruebas}
+\end{figure}
+
+El escenario en el que se realizarán las pruebas comprende dos redes distintas, una de gestión y otra de captura. Las redes deben estar separadas, y la red de captura debe contar con un switch intermedio para tener un dispositivo que de una cuenta exacta de los paquetes entregados al receptor.
+
+En los próximos apartados se describirá cada elemento de la arquitectura, trazando las líneas más significativas de su diseño y funciones. Para ello, en primer lugar se definirán los elementos lógicos que actúan en la realización de las pruebas, que, si bien ya fueron documentados en \cite{AABS05} y \cite{KABO05}, conviene explicar nuevamente.
+
+\section{Elementos lógicos de la arquitectura}
+La arquitectura de pruebas consta, atendiendo a su funcionalidad, de tres elementos lógicos, que describimos a continuación:
+\begin{enumerate}
+\item Gestor
+\item Agente
+\item Demonio
+\end{enumerate}
+
+\subsection{Gestor}
+El gestor proporciona la interfaz entre el entorno de pruebas y el administrador. Así, el gestor recibe como entrada un fichero XML en el que se le indican las pruebas a realizar, y los parámetros de configuración para cada una. El gestor ejecutará las pruebas en el mismo orden en el que se hayan definido, reuniendo para cada una los resultados (estadísticas) que se obtengan.
+
+Para realizar su tarea, el gestor se comunicará con uno o más agentes, indicándole a cada uno las acciones que debe realizar, y recogiendo los resultados que se reciban de los mismos. Se trata pues, de una arquitectura cliente/servidor, donde el gestor hará la función de cliente, conectándose a uno o varios servidores (agentes).
+
+\subsection{Agente}
+El agente es un servidor a la espera de recibir órdenes desde el gestor, para actuar de la forma que se le indique sobre los demonios de esa máquina. Un mismo agente puede actuar sobre varios demonios de forma simultánea. La comunicación entre el agente y los demonios sigue tres fases:
+
+\begin{description}
+\item [Inicialización del demonio] El agente se encarga de arrancar el demonio.
+\item [Terminación del demonio] La terminación se puede producir por parte del agente o por parte del demonio, en función de si éste es maestro o esclavo.
+\item [Recolección de estadísticas] El agente recoge las estadísticas que el demonio ha almacenado durante su ejecución, y se las envía al gestor.
+\end{description}
+
+\subsection{Demonio}
+Los demonios son los encargados de realizar las acciones sobre los dispositivos o elementos de la red que se quieren configurar. Un demonio puede realizar cualquier tipo de acción, siempre y cuando se ajuste a una interfaz previamente definida para el intercambio de comandos y datos con el agente correspondiente.
+
+Los demonios pueden ser de dos tipos, en función de la relación que mantienen con el agente:
+
+\begin{description}
+\item [Maestros] El agente arrancará estos demonios, pero serán ellos los que indiquen cuando han finalizado, en función de lo que tarden en ejecutarse. La duración total de la prueba dependerá del tiempo de ejecución de los demonios maestro.
+\item [Esclavos] El agente controlará tanto el arranque como la finalización de los demonios esclavo. Su finalización la determinará el gestor una vez se haya terminado de ejecutar los demonios maestro.
+\end{description}
+
+\section{Demonios de la arquitectura}
+Para llevar a cabo las pruebas de rendimiento en el sensor, se han creado dos demonios, a saber:
+
+\begin{enumerate}
+\item Recolector de estadísticas
+\item Traceador
+\end{enumerate}
+
+A continuación se explicarán las funciones y características de cada uno indicando las consideraciones a tener en cuenta.
+
+\subsection{Recolector de estadísticas}
+El gestor debe poder recolectar las estadísticas de este módulo y resetearlas cuando comience una nueva prueba. Con este fin, se ha diseñado un demonio que permite controlar y recolectar de forma remota las estadísticas del módulo.
+
+Se ha diseñado de tal manera que el demonio al activar las estadísticas las resetee a 0, y que al desactivarlas, también descargue el módulo de su ejecución.
+
+\subsection{Traceador}
+En este caso, el gestor debe además de activar y desactivar el módulo, guardar todas las trazas de algún modo. Para ello se ha diseñado para que en vez de mandar la información a través de la salida estándar, se mande un fichero generado con el contenido, ya que por las características del módulo se sabe que la salida va a ser grande.
