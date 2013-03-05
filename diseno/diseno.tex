@@ -14,9 +14,9 @@
 \usepackage{hyperref}           % Hacer links guays entre secciones y hacia fuera
 \usepackage[hypcap]{caption}    % Hacer que las referencias se vean, y no se queden por encima (referenciando imagenes, etc.)
 \hypersetup{
-	colorlinks=true,
-	linkcolor=blue,
-	citecolor=red,
+	colorlinks=true,			% Los links deben estar coloreados
+	linkcolor=blue,				% los links esternos deben ser azules
+	citecolor=red,				% y los de las citas rojos
 }
 \usepackage[table]{xcolor}      % Dar colores a las tablas
 \usepackage{eurosym}            % para tener el simbolo del euro
@@ -31,10 +31,11 @@
 \lhead{\includegraphics[width=5cm]{ingenieros-bilbao}}
 \rhead{Adaptación y extensión de la herramienta\\ de captura y análisis de tráfico Ksensor}
 \cfoot{\thepage}
-\setlength{\headheight}{47pt}
+\setlength{\headheight}{46pt}	% Para evitar que desaparezca una imagen
 
 \usepackage{titlesec}           % cambiar el estilo soso de los capítulos
-\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter. }{0pt}{\Huge\bfseries}
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter. }{0pt}{\Huge\bfseries} % Cual es el formato que deben seguir los capítulos
+\titlespacing{\chapter}{0pt}{-80pt}{20pt} %cual es el espacio que deben tener encima
 \usepackage{makeidx}            % Hacer índices
 
 % % % % % % % % % % % % % % % % % % % % % % %

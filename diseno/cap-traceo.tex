@@ -1,4 +1,22 @@
 \chapter{Arquitectura del traceador}
 El módulo de traceo es como su nombre indica un módulo para sacar trazas del sistema. Se puede definir traza como una referencia de como está funcionando un determinado programa en un instante. Una característica inherente a una traza debe ser que tenga poca repercusión en el funcionamiento del programa, que puedan ser muchas trazas, y que se guarden el mínimo número de datos posibles.
 
-Todo esto es lo que define 
+\section{Interfaz hacia el usuario}
+
+La interfaz que debe usarse de cara al usuario debe ser lo más estándar posible. Una de las posibilidades sería el uso de la interfaz que el proyecto \cite{AABS05} provee, a través de la librería de memoria compartida, utilizando también la librería parser, seríamos capaces de conseguir la información.
+
+Esta alternativa no es una opción, la utilización de una interfaz personal dificultaría la liberación y aceptación del código del módulo. Por eso mismo, se ha elegido la interfaz seq\_file descrita en \reference{sec:info-usuario}{Métodos para enviar información al usuario}, ya que permite a un programa externo interactuar con las trazas sin necesidad de tener una interfaz personalizada, de cara al usuario.
+
+Aunque las interfaces para efectuar trazas pudieran ser variables en parámetros, se ha simplificado el diseño para evitar que la carga introducida por la función que guarda el valor tenga mayor impacto en el funcionamiento. Este primer diseño no requerirá por lo tanto de grandes trozos de código, y el usuario podrá utilizar la misma lógica para parsear cada uno de las líneas del fichero.
+
+\section{Interfaz e integración en el kernel}
+El módulo deberá ser (des)habilitable de una forma simple en un kernel, cuando no se desee dicha funcionalidad. Así mismo, dicha funcionalidad, una vez incluida en el kernel, deberá ser (des)activable, de tal manera que se pueda elegir cuando se desea tracear el sistema y cuando no.
+
+La activación y desactivación del módulo se harán por lo tanto a través del sistema de carga y descarga de módulos, por lo tanto, la implementación deberá comprobar de alguna manera si el sistema tiene cargado el módulo o no y guardar la medición en caso afirmativo.
+
+\section{Almacenamiento de la información}
+Toda la información debe ser almacenada junta en un espacio de direccionamiento suficientemente capaz. Tanto como se podía optar por guardar los datos en un fichero físico, por las cualidades del kernel de Linux y los niveles de almacenamiento de memoria física en el ordenador, se implementará todo en memoria con direccionamiento virtual.
+
+En el diseño se ha aprovechado que el kernel provee de una memoria virtual superior a la memoria del sistema utilizando un método de swapping\footnote{Swapping se define como el uso de un dispositivo de almacenamiento físico como memoria física, ej disco duro}. Por lo tanto, a no ser que el fichero supere 500MB de memoria, no debería haber problemas en una máquina de más de 4GB.
+
+La manera de resetear la información guardada y empezar de nuevo, es descargando y cargando el módulo. Como el tamaño necesario de almacenamiento es suficiente para las necesidades actuales, y además la reutilización de la zona de memoria supondría una bajada del rendimiento que va en contra de las especificaciones de este módulo, se ha decidido por el método más simple posible.

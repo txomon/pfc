@@ -45,16 +45,24 @@ La solución que se pretende adquirir en esta nueva implementación es que la cola
 
 El diseño que se va a seguir, va a dar resultado a gráficas en forma de diente de sierra, pero se van a distribuir las capturas para ir llenando la cola siempre que se llegue al nivel de $tama\check{n}o\ de\ cola- 300$. Este cambio de diseño se espera justificar con pruebas contra el diseño alternativo.
 
-\subsection{Secciones críticas}
+\subsection{Bloqueos en secciones críticas}
 
-Ksensor, al contrario de lo que se pensaba, no era tan óptimo como se pensaba en computadoras multinúcleo de gran potencia. Tras un análisis del código, se han podido identificar varios segmentos del mismo que tienen secciones críticas demasiado grandes, e incluso, secciones críticas que no son necesarias por el diseño del sistema.
+Ksensor, al contrario de lo que se pensaba, no es tan óptimo como se pensaba en computadoras multinúcleo de gran potencia. Tras un análisis del código, se han podido identificar varios segmentos del mismo que hay secciones críticas demasiado grandes, e incluso, secciones críticas que no son necesarias por el diseño del sistema.
 
 Uno de los mayores problemas que se ha podido discernir es la situación de bloqueo que se da en el acceso a la cola única de procesamiento de las arquitecturas multiprocesador, donde hay varias instancias que se quedan a la espera de conseguir acceso a la cola.
 
-Tanto como en el proyecto de Ksensor \cite{KABO05} hay un desarrollo argumentado muy completo de porqué utilizar una cola es lo óptimo, no se entra a debatir sobre la posibilidad de procesar paquetes en grupos, tal y como hace el nuevo método gro \ref{sec:gro}.
+Tanto como en el proyecto de Ksensor \cite{KABO05} hay un desarrollo argumentado muy completo de porqué utilizar una cola es lo óptimo, no se entra a debatir sobre la posibilidad de procesar paquetes en grupos, tal y como hace el nuevo método GRO \ref{sec:gro}.
 
-Uno de los cambios de diseño propuestos para Ksensor es la asignación variable de cupos de paquetes. Una instancia, que por el motivo que fuera se queda bloqueada en el acceso a la cola, cogerá un paquete más cada vez que se quede bloqueado al intentar acceder a la cola.
+\subsubsection{Mejoras}
+Uno de los cambios de diseño en Ksensor es la asignación variable de cupos de paquetes. Una instancia, que por el motivo que fuera se queda bloqueada en el acceso a la cola, cogerá un paquete más cada vez que se quede bloqueado al intentar acceder a la cola.
 
-Es importante especificar que el diseño que se plantea no tiene como objetivo que un hilo de Ksensor acabe cogiendo cada vez más paquetes, por ello debe distinguirse entre que aumente el tiempo de bloqueo porque no hay paquetes y porque haya otras instancias intentando acceder.
+Es importante especificar que el diseño que se plantea no tiene como objetivo que un hilo de Ksensor acabe cogiendo cada vez más paquetes y por ello debe distinguirse entre que aumente el tiempo de bloqueo porque no hay paquetes o porque haya otras instancias intentando acceder.
 
+Las pautas que se seguirán en el diseño de bajo nivel deben ser:
+\begin{itemize}
+\item Deberá cogerse un paquete más cada vez que el hilo de análisis se quede bloqueado por otro hilo.
+\item Se cogerán hasta un máximo de $n\ paquetes$ por acceso a la cola, donde \\$n=n\acute{u}mero\ de\ procesadores$.
+\item Se cogerá un paquete menos cada vez que el hilo de análisis tenga un acceso sin bloqueo.
+\end{itemize}
 
+Se ha decidido limitar a esta cantidad porque es una cantidad que varía dependiente del número de agentes que intentan acceder. Con estas especificaciones del diseño, se espera que el rendimiento sea un 10\% mayor. Este control de congestión se implementará como una alternativa al control de congestión que ya existe para su validación.

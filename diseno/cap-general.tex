@@ -58,7 +58,7 @@ La implementación anterior, si bien entendía como necesaria el uso del sistema d
 
 Por lo tanto, se empezó a separar de manera lógica la gestión del interfaz físico y la administración de las colas virtuales. Haciendo que por ese motivo, ahora que ya está totalmente separado uno del otro, el diseño de Ksensor se debe adaptar a la nueva lógica del kernel de captura de paquetes.
 
-\section{Métodos para enviar información al usuario}
+\section{Métodos para enviar información al usuario} \label{sec:info-usuario}
 Una de las cosas importantes a la hora de plantear los módulos de estadística y traceo de ksensor son las interfaces hacia el espacio de usuario que se van a utilizar. A continuación se explicarán de una forma breve cuales son los diferentes sistemas que se utilizan en Linux, ya que aunque para sacar poca información está bien, para sacar mucha información es totalmente ineficaz.
 
 \begin{description}

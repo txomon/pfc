@@ -1,0 +1,30 @@
+\chapter{Arquitectura del módulo de estadísticas}
+El módulo de estadísticas se define como un módulo que saca como su nombre indica, estadísticas. Estas mediciones son independientes de las que el módulo Ksensor hace en su interior, y son orientadas a estadísticas de procesamiento del nivel de captura de red.
+
+El módulo medirá los siguientes números de veces y tiempos:
+\begin{itemize}
+\item Hardirqs
+\item Softirqs
+\item Sondeos (\textit{polls})
+\item Captura de paquetes
+\end{itemize}
+
+Con estas medidas, se esperan obtener estadísticas independientes del sistema Ksensor, sin afectar a su rendimiento o sus estadísticas de rendimiento. Además, también se pretende sacar estadísticas del sistema sin estar Ksensor cargado, por lo que ha sido diseñado totalmente independiente de este.
+
+\section{Interfaz hacia el usuario}
+
+Tal y como se ha desarrollado en el anterior módulo y en la descripción general, la interfaz hacia el usuario tiene bastantes variantes. En este caso específico, como el volumen de datos a mostrar al usuario es pequeño, se ha decidido utilizar la implementación habitual del sistema de ficheros \textit{procfs}.
+
+Se generará un fichero virtual para cada valor estadístico que se quiera transmitir, y este contendrá el valor. Con esta implementación tan simple, se puede dar cabida a recabar información de una forma selecta que evita que un programa tenga que parsear el fichero, si no que solo tenga que seleccionar los parámetros que quiere recabar.
+
+\section{Interfaz e integración en el kernel}
+
+El método de integración que se ha elegido, al contrario que el anterior módulo, solo es (des)habilitable en compilación, ya que las mediciones que efectúa son en secciones críticas del código y la mera comprobación del estado de carga del módulo supone un lastre suficiente para el sistema.
+
+Por esa razón, cuando el módulo esté deshabilitado, no se crearán estadísticas en el sistema, por el contrario, si el módulo está habilitado, cargar el módulo solo proveerá el visionado de las estadísticas y su reseteo, mientras que el sistema estará continuamente actualizando las estadísticas, solo que sin acceso a ellas.
+
+Por lo tanto el módulo debe proveer una interfaz para resetear los datos.
+
+\section{Almacenamiento de la información}
+
+Por la estructura de la información, que proviene de diferentes lugares, en muchos casos difícil de acceder, se ha diseñado de tal forma que se tenga acceso a todos los datos estadísticos de una manera global. Habrá un espacio de almacenamiento para cada uno de los parámetros que se tienen que calcular.
