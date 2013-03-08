@@ -1,3 +1,180 @@
 \chapter{Arquitectura y rediseño de Ksensor}
 
-Tal y como se han descrito en el apartado anterior las nuevas características de la implementación del 
+Tal y como se han descrito en el apartado anterior las nuevas características de la implementación del kernel de Linux, Ksensor se ha adaptado al uso de superpaquetes. Esto no requiere ningún cambio y hará que Ksensor pueda tener agrupados previamente paquetes en su cola.
+
+Según la documentación de GRO, este método es posible revertirlo en cuanto a conservación de los paquetes se refiere. Así mismo, hay suficientes criterios que se tienen que cumplir y que solo los paquetes que no han tenido ningún tipo de error de red hacen que GRO los acumule.
+
+A continuación explicaremos los cambios que hay respecto a la actualización de Ksensor a este nuevo kernel, empezando desde las necesidades específicas planteadas en el documento de alto nivel y a continuación se pasarán a describir como se van a implementar las mejoras.
+
+\section{Necesidades de Ksensor}
+
+En esta sección se explicarán las necesidades de Ksensor descritas en este mismo apartado en el documento de alto nivel. Se omitirá el apartado de listas de estructuras porque no ha habido cambios en la forma en la que el kernel de Linux gestiona las listas de estructuras.
+
+\subsection{Discriminar paquetes por interfaz}
+
+De las necesidades de Ksensor respecto al sistema, esta es la que más cambios ha tenido por consecuencia de los cambios lógicos en el kernel.
+
+Aunque había manera de saber cuales eran las estructuras \code{struct napi\_struct} que pertenecían a una interfaz, no había una manera de saber cuales son las estructuras NAPI que representan a las colas virtuales que nos interesaba capturar. Por ello, se capturarán todas las colas que se reciban de una interfaz, \code{struct net\_device}, ya que de momento no hay necesidad de distinguir por colas virtuales, ni se cuenta con tarjetas que puedan aprovecharse de esto.
+
+\subsection{Establecer afinidad entre interfaces y procesadores}
+
+En este caso, la afinidad del dispositivo dio bastantes problemas porque ha desaparecido el array \code{irq\_desc} que daba una información concreta y fácil de interpretar sobre el estado de la afinidad.
+
+Actualmente, tras investigaciones en el resto del código, se han encontrado otras implementaciones del cambio de afinidad y gracias a ello, este cambio ya no tiene mayor problema, puesto que podemos aprovechar el código que se utiliza en \code{/proc/irq/\#\#/smp\_affinity}. Este se puede adaptar para el cambio de afinidad de las interfaces. Es importante hacer algunas comprobaciones del estado de las CPUs. El resultado es este:
+
+\begin{lstlisting}[caption={Código para cambiar la afinidad de un dispositivo de red}, label=set-device-affinity]
+static int set_device_affinity(struct net_device *dev, int cpu_id)
+{
+	int err;
+	unsigned int irq = dev->irq;
+	
+
+	if (!irq_can_set_affinity(irq) || no_irq_affinity)
+		return -EIO;
+
+	/*
+	 * We check that the cpu is a valid cpu number, if it isn't, that means we may
+	 * reset the irq to whatever the arch considers.
+	 */
+	if (0 > cpu_id || cpu_id >= NR_CPUS)
+		return irq_select_affinity_usr(irq, cpu_online_mask);
+
+	/* If we get here it is a valid cpu_id, so lets update the affinity */
+	irq_set_affinity(irq, cpu_maskof(cpu_id));
+	return 0;
+}
+\end{lstlisting}
+
+En definitiva este código proporciona una interfaz actualizada al resto del código de Ksensor para que pueda elegir las NIC en qué cpu pueden ser atendidas. El hilo de captura de Ksensor será utilizado en una única CPU, por lo que esta función ha sido modificada para que además de evitar utilizar estructuras poco comunes, la función pueda ser llamada de una manera más simple, y con los errores que pudieran surgir arreglados.
+
+En lo referente al cambio de afinidad de los hilos de análisis las funciones no han sufrido modificaciones, por lo que se pueden utilizar como están.
+
+\subsection{Promiscuidad del dispositivo}
+La última de las necesidades citadas en el diseño nivel es poder ordenarle a la tarjeta que capture todos los paquetes que pasen por su enlace. Esta funcionalidad no ha cambiado desde la implementación del proyecto \cite{KABO05},
+
+\section{Mejoras de Ksensor}
+En esta sección se explicarán algunas mejoras respecto al anterior código para mejorar el rendimiento. Se seguirá el orden en el documento de alto nivel para una mejor compresión.
+
+\subsection{Control de congestión}
+
+El control de congestión actual es un método simple y efectivo, el número máximo de paquetes que la cola admite son \code{limit\_packlen}, variable almacenada en la estructura de control de Ksensor \code{struct kscap\_dev}. En esa misma estructura también hay una variable llamada \code{thres\_packlen} que fija el límite umbral de paquetes a partir del cual se desactivará el control de congestión.
+
+Este método si bien ya es configurable, puesto que en caso de querer hacer variar el número de paquetes máximo de la cola o el número a partir del cual se desactiva el control de congestión, no deja depender el umbral respecto al número de budget.
+
+Por eso mismo, se va a añadir una opción para hacer que el sistema pueda ser configurado con un número variable del budget. Se ha diseñado de tal manera que si se introduce un 0 en la configuración como valor umbral, esto active el control de congestión para ser dependiente de la variable antes mencionada \code{netdev\_budget}.
+
+\subsection{Bloqueos en secciones críticas}
+
+Las secciones críticas se controlan a través de semáforos, que se encargan de asegurar de que no hay ningún otro proceso haciendo algo. Estos semáforos en kernel suponen un gasto mínimo, como en cualquier caso, pero aseguran que está haciendo algo a prueba de que otro modifique lo que el hilo está usando.
+
+Hay varios tipos de semáforos, y estos están documentados tanto en \cite{OUTL00} como en el proyecto \cite{KABO05}. No ha habido cambios en lo que al tratamiento de semáforos se refiere, por lo que no hay que hacer adaptación de este código.
+
+\subsubsection{Spinlock en encolado/desencolado de paquetes}
+
+Uno de los problemas que se ha visto en la implementación actual es que en procesadores muy rápidos, donde el procesado del paquete se hace en un tiempo muy breve, y el acceso a la cola empieza a ser un problema, ya que se tarda más en conseguir el acceso a la cola que en procesar el paquete.
+
+Para resolver esto, se propuso en el diseño de alto nivel la implementación de un mecanismo por el cual los hilos de procesado capturarían más paquetes si había colisiones a la hora coger los diferentes mecanismos de sincronización. De esta manera se asegura que un hilo de análisis va a coger suficiente trabajo como para que al ser muchos los que necesitan acceder, este ocupado durante suficiente tiempo de manera que los bloqueos tengan una menor probabilidad.
+
+En específico, este apartado creará un contador de paquetes a procesar por cada hilo y tanda, dentro de la estructura de control \code{struct kscap\_dev}, que los hilos modificarán hasta el máximo de números de cpu. Esto se hará a través de una llamada a \code{atomic\_add\_unless()}, que se encarga de que no se supere un umbral dado.
+
+Además a los hilos se les ha enseñado a saber cuando han quedado bloqueados por otros hilos y cuando porque no había paquetes. En cualquier caso, se han creado una estadísticas de tiempo medio de espera en las diferentes partes del código para poder hacer cálculos de bloqueos de una forma más sencilla.
+
+Estas estadísticas serán sacadas como el resto en las estadísticas de Ksensor, \code{struct kscap\_stats}.
+
+\subsubsection{Longitud de las secciones críticas}
+
+En la anterior implementación, a fin de tener estadísticas, se introdujeron líneas de código en secciones criticas. A fin de evitar esto, se han cambiado varias partes, por ejemplo, a la hora de encolar paquetes, se hacía de esta manera:
+
+\begin{lstlisting}[caption={Código de encolado de paquetes antiguo}, label=old-enqueue-skb]
+static inline void queue_skb_ksensor(struct sk_buff *skb) 
+{
+	unsigned int cur_packlen;
+	unsigned long flags;
+	int dropped = 0;
+	struct sk_buff_head *q = &kscap.pack_queue;
+	struct kscap_stats *st = &__get_cpu_var(kscap_stats);
+
+	spin_lock_irqsave(&q->lock, flags);
+
+	cur_packlen = skb_queue_len(q);
+	
+	if(cur_packlen < kscap.limit_packlen >> 2)	
+		st->cong_off++;		/* 0%  to 25% */
+	else if(cur_packlen < kscap.limit_packlen >> 1)	
+		st->cong_low++;		/* 25% to 50% */
+	else if(cur_packlen < kscap.limit_packlen - (kscap.limit_packlen >> 2))
+		st->cong_mid++;		/* 50% to 75% */
+	else 
+		st->cong_high++;	/* 75% to 100% */
+	
+	if(cur_packlen >= kscap.limit_packlen) {  /* full queue */
+		kfree_skb(skb);
+		st->dropped++;	
+		dropped = 1;
+	} else {
+		__skb_queue_head(q, skb);	
+		st->captured++;
+	}
+	spin_unlock_irqrestore(&q->lock, flags);
+	
+	wake_up_interruptible(&kscap.pack_wq);
+}
+\end{lstlisting}
+
+Y en nuestro caso, se han sacado cosas innecesarias del código y se han añadido estadísticas:
+
+\begin{lstlisting}[caption={Código de encolado de paquetes actual}, label=new-enqueue-skb]
+static inline void queue_skb_ksensor(struct sk_buff *skb) 
+{
+	unsigned int cur_packlen;
+	unsigned long flags;
+	int dropped = 0;
+	struct sk_buff_head *q = &kscap.pack_queue;
+	struct kscap_stats *st = &__get_cpu_var(kscap_stats);
+	unsigned long long start_time, stop_time, delta;
+
+	rdtscl(start_time);
+
+	spin_lock_irqsave(&q->lock, flags);
+
+	cur_packlen = skb_queue_len(q);
+
+	if(cur_packlen >= kscap.limit_packlen) {  /* full queue */
+		kfree_skb(skb);	
+		dropped = 1;
+	} else {
+		__skb_queue_head(q, skb);
+	}
+	spin_unlock_irqrestore(&q->lock, flags);
+
+	wake_up_interruptible(&kscap.pack_wq);
+
+	if(cur_packlen < kscap.limit_packlen >> 2)	
+		atomic64_inc(st->cong_off);		/* 0%  to 25% */
+	else if(cur_packlen < kscap.limit_packlen >> 1)	
+		atomic64_inc(st->cong_low);		/* 25% to 50% */
+	else if(cur_packlen < kscap.limit_packlen - (kscap.limit_packlen >> 2))
+		atomic64_inc(st->cong_mid);		/* 50% to 75% */
+	else 
+		atomic64_inc(st->cong_high);		/* 75% to 100% */
+
+	if(dropped)
+		atomic64_inc(st->dropped);
+	else
+		atomic64_inc(st->captured);
+
+	rdtscl(stop_time);
+
+	delta = (stop_time - start_time);
+
+	if(dropped == 1)
+		skb->dev->capture_stats.queue_dropped_time += delta;
+	else
+		skb->dev->capture_stats.queue_time += delta;
+}
+\end{lstlisting}
+
+Como se puede observar, se ha sacado la mayoría de procesamiento fuera de la sección crítica, y se han convertido los datos de enteros, a una forma atómica de los mismos, lo cual evita tener que controlar el acceso a los mismos con semáforos, que tiene un coste extra.
+
+Hay otras partes del código que se han adaptado de igual manera pero que no se van a introducir en este documento.
+

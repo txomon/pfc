@@ -23,4 +23,10 @@ Es muy importante que el diseño en esta parte concuerde con el código y con la l
 
 Uno de los problemas a los que se enfrentaba Ksensor en caso de liberación era que no utilizaba los métodos de desarrollo de kernel, ahora que se ha integrado en el árbol de kernel como cualquier otro componente, se tiene que integrar de una manera constantemente actualizada esta versión en el repositorio.
 
-En caso de liberar el código, se ha creado una rama de desarrollo paralela a la master de kernel, partiendo de la versión 3.6, que está lista para su uso con un sistema de Integración Continua (CI).
+En caso de liberar el código, se ha creado una rama de desarrollo paralela a la master de kernel, partiendo de la versión 3.6, que está lista para su uso con un sistema de Integración Continua (CI). A continuación se relatarán los cambios para llevar a cabo tal integración
+
+\subsection{Integración de Ksensor en el repositorio}
+
+Ksensor, tal y como se creó en su momento, está compuesto de unas modificaciones en el kernel, que son las que se han estado mencionando hasta ahora principalmente, un módulo de kernel, que entre otros tiene un driver, una librería de memoria compartida para kernel, libkshmm, y el parser, una aplicación que se encarga de convertir el xml de configuración a su representación en la zona de memoria compartida, y después sacar los datos de ella.
+
+En definitiva, el sistema Ksensor cuenta con muchas partes que deben ser integradas, cada una de ellas debe ir en una parte del kernel para permitir una integración con el código normal.
