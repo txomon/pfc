@@ -1,1 +1,9 @@
-	
+\chapter{Módulo de estadísticas}
+
+En este apartado se explicará como se ha creado el módulo de estadísticas. Es importante que se entienda que este módulo debe ser desarrollado para su uso en un kernel normal, aunque optativamente, si se compila con soporte para Ksensor, se añadirán algunas estadísticas para este.
+
+En este módulo se seguirá un orden análogo a los anteriores, en un principio, se explicará como se ha creado e implementado la interfaz hacia el usuario, a continuación, se pasará a explicar cual es la interfaz hacia el sistema, y por último, se describirá la manera en la que funciona internamente.
+
+\section{Interfaz hacia el usuario}
+
+Tal y como se ha explicado en el documento de diseño de alto nivel, este módulo creará una entrada en \textit{procfs} para cada una de las estadísticas. Por lo tanto, utilizando las funciones específicas de
