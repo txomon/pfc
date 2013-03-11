@@ -1,9 +1,14 @@
 % !TeX spellcheck = es_ES
-
-\title{Adaptación y extensión de la herramienta de captura y análisis de tráfico Ksensor\\Diseño de bajo nivel}
-\author{Javier Domingo Cansino}
-
 \documentclass[11pt,a4paper]{report} % Para tener un documento grande pero sin ser un libro (solo hay esta posibilidad)
+\usepackage{../portada}
+
+\title{Adaptación y extensión de la herramienta de captura y análisis de tráfico Ksensor}
+\author{Javier Domingo Cansino}
+\subtitle{Diseño de bajo nivel}
+\director{Armando Ferro Vazquez}
+\proffesor{Luis Zabala Alberdi}
+\codirectortrue
+
 \usepackage[latin1]{inputenc}   % Para la codificación
 \usepackage{textcomp}           % Para los simbolos de euro
 \usepackage[spanish]{babel}     % Para el lenguaje que tenga bien
@@ -23,17 +28,19 @@
 \usepackage[doublespacing]{setspace}
 \usepackage{listings}			% Para formatear código
 \lstset{						% El estilo para formatearlo sera este
-basicstyle=\small\singlespacing\ttfamily, % La letra tiene que ser pequeña y espaciado simple y monoespaciada
-keywordstyle=\bfseries\color{blue},		% las palabras clave tienen que estar en azul
-identifierstyle=\color{black},	% Los identificadores (funciones y variables)
-commentstyle=\color{gray},		% Los comentarios en gris
-language=C,						% El lenguaje de programación es C
-extendedchars=true,				% Usamos más caracteres que los ascii
-breaklines=true,				% Puede cortar las lineas que ocupen demasiado
-breakatwhitespace=true,			% 	pero tiene que hacerlo en los espacios en blanco
-frame=lines,					% Poner lineas al principio y al final del código para acotarlo
-tabsize=4,
+	basicstyle=\small\singlespacing\ttfamily, % La letra tiene que ser pequeña y espaciado simple y monoespaciada
+	keywordstyle=\bfseries\color{blue},		% las palabras clave tienen que estar en azul
+	identifierstyle=\color{black},	% Los identificadores (funciones y variables)
+	commentstyle=\color{gray},		% Los comentarios en gris
+	language=C,						% El lenguaje de programación es C
+	extendedchars=true,				% Usamos más caracteres que los ascii
+	breaklines=true,				% Puede cortar las lineas que ocupen demasiado
+	breakatwhitespace=true,			% 	pero tiene que hacerlo en los espacios en blanco
+	frame=lines,					% Poner lineas al principio y al final del código para acotarlo
+	tabsize=4,
 }
+\renewcommand{\lstlistlistingname}{\textbf{Trozos de código}}
+\renewcommand{\lstlistingname}{\textbf{Trozo de código}}
 \usepackage{eurosym}            % para tener el simbolo del euro
 \usepackage{setspace}           % Para hacer el espaciado entre líneas
 \setstretch{1.4}                %      1.4 del espacio normal
@@ -62,9 +69,8 @@ tabsize=4,
 
 \begin{document}
 \pagenumbering{Roman}
-\maketitle % Crear el título
+\maketitle
 \tableofcontents % Crear la tabla de contenidos
-
 \pagenumbering{arabic}
 
 \include{cap-introduccion}
@@ -73,6 +79,7 @@ tabsize=4,
 \include{cap-traceo}
 \include{cap-estadisticas}
 \include{cap-integracion}
+\include{cap-estandarizacion}
 \include{cap-entorno-de-pruebas}
 
 \pagenumbering{Roman}

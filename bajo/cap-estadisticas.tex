@@ -1,9 +1,49 @@
-\chapter{MÃ³dulo de estadÃ­sticas}
+\chapter{Módulo de estadísticas}
 
-En este apartado se explicarÃ¡ como se ha creado el mÃ³dulo de estadÃ­sticas. Es importante que se entienda que este mÃ³dulo debe ser desarrollado para su uso en un kernel normal, aunque optativamente, si se compila con soporte para Ksensor, se aÃ±adirÃ¡n algunas estadÃ­sticas para este.
+En este apartado se explicará como se ha creado el módulo de estadísticas. Es importante que se entienda que este módulo debe ser desarrollado para su uso en un kernel normal, aunque optativamente, si se compila con soporte para Ksensor, se añadirán algunas estadísticas para este.
 
-En este mÃ³dulo se seguirÃ¡ un orden anÃ¡logo a los anteriores, en un principio, se explicarÃ¡ como se ha creado e implementado la interfaz hacia el usuario, a continuaciÃ³n, se pasarÃ¡ a explicar cual es la interfaz hacia el sistema, y por Ãºltimo, se describirÃ¡ la manera en la que funciona internamente.
+En este módulo se seguirá un orden análogo a los anteriores, en un principio, se explicará como se ha creado e implementado la interfaz hacia el usuario, a continuación, se pasará a explicar cual es la interfaz hacia el sistema, y por último, se describirá la manera en la que funciona internamente.
 
 \section{Interfaz hacia el usuario}
 
-Tal y como se ha explicado en el documento de diseÃ±o de alto nivel, este mÃ³dulo crearÃ¡ una entrada en \textit{procfs} para cada una de las estadÃ­sticas. Por lo tanto, utilizando las funciones especÃ­ficas de
+Tal y como se ha explicado en el documento de diseño de alto nivel, este módulo creará una entrada en \textit{procfs} para cada una de las estadísticas. Por lo tanto, utilizando las funciones específicas de creación de ficheros en procfs se crean así.
+
+\begin{lstlisting}[caption={Crear entrada de procfs}, label={stats-procfs}]
+entry = create_proc_entry("polling_packets", 0644, iface_dir);
+entry->read_proc = show_var;
+entry->data = &napi->capture_stats.polling_packets;
+\end{lstlisting}
+
+Este segmento de código ejemplifica la forma en la que se crea y se inicializa un fichero de proc. En la primera línea se crea la entrada, en la segunda se le indica la función que tiene que ser llamada en caso de que el usuario quiera leer el fichero, y en la tercera se le señala cuales son los datos que tiene que recibir la citada función.
+
+Esta es la manera de crear todas esas entradas. Se ha diseñado de tal manera que cree una entrada de cada estadística por interfaz, en el directorio \code{iface\_dir}.
+
+Además, para poder resetear las estadísticas, se ha creado una entrada que al pasarle cualquier valor pone a cero todas las estadísticas.
+
+\section{Interfaz hacia el kernel}
+
+Este módulo se ha creado como un módulo que utiliza una variable añadida a \code{struct napi\_struct} que sirve para ir recolectando y añadiendo las estadísticas. Las mediciones están hechas a mano en el código, en distintas partes. Todas las mediciones se efectuan utilizando la función \code{sched\_clock}, que es la medida más a bajo nivel que se puede encontrar sin perder el soporte multiplataforma. Además, esta medición tiene algunes controles que aseguran una correcta medición, ya que en caso de hacerlos con otras funciones, como \code{rdtscl}, se produce un kernel panic en entornos de hardirq.
+
+Por lo tanto, una muestra de como se hace la medición de una hardirq es esta:
+
+\begin{lstlisting}[caption={Medir hardirq}, label={stats-hardirq}]
+static irqreturn_t hardirq_handler(int irq, void *data)
+{
+	unsigned long long int int_start;
+	int_start=sched_clock();
+
+	/* ... */
+	
+	napi.capture_stats.hardirq_num++; //increment hard interrupt
+	napi.capture_stats.hardirq_ac += sched_clock() -  int_start;
+	return IRQ_HANDLED;
+}
+\end{lstlisting}
+
+De esta manera, como se puede observar, se está midiendo el número de hardirqs y el tiempo que tarda en cada una de ellas. Como se puede observar, es imposible no efectuar la medida, no hay ninguna manera de evitarla, por lo tanto, aunque esto sea parte de las modificaciones en el módulo, el módulo propiamente dicho solo es la interfaz hacia el usuario, y el encargado de resetear en caso de que así lo pida el usuario.
+
+\section{Funcionamiento interno}
+
+Como se puede observar, el funcionamiento interno del módulo es sencillo, se dedica a mostrar los parámetros que se han programado, de una forma que facilita el filtrado por tipo. La verdadera dificultad en el funcionamiento es decidir donde poner las trazas y en seguir todo el flujo de kernel para medir exactamente lo que se requiere.
+
+Este tipo de estadísticas son totalmente personalizadas, ya que se modifica el código de los drivers para sacar mediciones de su rendimiento. Aunque sea un módulo que se pueda ejecutar sin Ksensor, su mayor objetivo es la validación de este, por ello las estadísticas solo se han implementado para los drivers e1000, e1000e y tg3, usados en el laboratorio para las pruebas.

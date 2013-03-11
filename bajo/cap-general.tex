@@ -11,7 +11,7 @@ En esta sección se va a describir cómo están implementadas las partes del kernel
 
 Las explicaciones van a efectuarse sobre el conocimiento que se puede adquirir leyendo los libros de programación en entorno de kernel, \cite{OLDD09}, \cite{OULN05} y \cite{OUTL00}. Aunque habrá veces en las que se referencie alguno de los anteriores libros, en general, todas las explicaciones se van a hacer aquí porque no hay ningún tipo de documentación en la que apoyarse.
 
-\section{Gestión de las interfaces de red}
+\section{Gestión de las interfaces físicas de red}
 
 Para entender como se ha hecho el diseño de bajo nivel de una parte de las cosas, es necesario entender como está montado el subsistema de red, de gestión de recursos, y gestión de dispositivos físicos. Para ello, en \cite{OLDD09} se explica como se gestionan los dispositivos.
 
@@ -46,7 +46,7 @@ La softirq, llamada \code{net\_rx\_action()} en el fichero \code{/net/core/dev.c
 
 Por lo tanto, una softirq se ve limitada al valor límite de \code{netdev\_budget} paquetes y a un valor estático de tiempo de ejecución (2 jiffies). La rutina se encarga de hacer poll a las interfaces que tiene apuntadas en la lista de polling, en \code{poll\_list} y finaliza cuando se ha sobrepasado alguno de los límites anteriormente expuestos o cuando se acaban las interfaces a las que hacer poll.
 
-La función de poll mencionada recibe dos parámetros, la estructura \code{struct napi\_struct} que describe la cola de la que se tienen que extraer paquetes, y el número de paquetes total que está autorizado a extraer. Para llevar un control exacto de los paquetes, esta devuelve el número de paquetes total recibido, llamado \code{work}.
+La función de poll recibe dos parámetros, la estructura \code{struct napi\_struct} que describe la cola de la que se tienen que extraer paquetes, y el número de paquetes total que está autorizado a extraer. Para llevar un control exacto de los paquetes, esta devuelve el número de paquetes total recibido, llamado \code{work}.
 
 \section{Recepción de paquetes de red}
 

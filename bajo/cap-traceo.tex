@@ -1,0 +1,175 @@
+\chapter{Módulo de trazas}
+
+En este capítulo se explicará como se han implementado las especificaciones y el funcionamiento que se ha propuesto en el diseño de alto nivel. Se seguirá el mismo orden de explicación que se ha seguido en el diseño de alto nivel.
+
+En primer lugar, se explicará como se ha creado la interfaz hacia el usuario, utilizando el sistema de archivos virtual procfs, seguidamente, el método para utilizarlo en el kernel, después la lógica para guardar las trazas que se ha implementado, y por último, se añadirá una nueva sección respecto al diseño de alto nivel en el que se mostrará como se utiliza para sacar trazas de las softirq.
+
+\section{Interfaz hacia el usuario}
+
+A la hora de crear la interfaz hacia el usuario en este caso se ha elegido implementarla con el mecanismo dispuesto por seq\_file, que está diseñado para la creación de ficheros virtuales grandes. La documentación de este tipo de implementación está explicado en \cite{OLDD09}. Aquí se explicará brevemente la forma de crear este fichero.
+
+La lógica que hay detrás de esta implementación es la de dividir la generación de información en 4 simples funciones.
+
+\begin{description}
+\item[\code{seq\_file\_start}] Esta función se encarga de inicializar todo lo necesario para poder empezar a sacar la información. Por ejemplo, uno de sus usos es para la inicialización de zonas de memoria que se vayan a utilizar durante el visionado.
+
+\item[\code{seq\_file\_show}] Se encarga de mostrar por pantalla el número de entrada especificado en uno de los parámetros. La numeración es de libre interpretación de la implementación que la realice. En el caso del módulo de trazas, cada entrada representa una traza.
+
+\item[\code{seq\_file\_next}] Esta rutina hace los cambios necesarios de punteros o contadores para cambiar a la siguiente entrada desde un número dado de entrada.
+
+\item[\code{seq\_file\_stop}] Tanto como la función de \code{seq\_file\_start} hacía las inicializaciones, esta función es la que se ejecuta cuando se ha acabado el visionado del fichero virtual. No tiene porqué haber acabado al final, si no que al finalizar el visionado se encarga de liberar los recursos necesarios. Por ejemplo, liberando zonas de memoria temporales para el procesamiento de la salida.
+\end{description}
+
+\begin{lstlisting}[caption={Implementación de seq\_file}, label={implementacion-seqfile}]
+static void *capture_tracer_seq_start(struct seq_file *s, loff_t *pos)
+{
+	if(!*pos)
+		return SEQ_START_TOKEN;
+	if(*pos >= CAPTURE_TRACER_TOTAL_MEASURES 
+		|| *pos >= ((measure_end - measure_start) / sizeof(struct capture_tracer_measure)))
+		return NULL;
+	return (memory_zone + sizeof(struct capture_tracer_measure) * (*pos));
+}
+
+void *capture_tracer_seq_next(struct seq_file *s, void *iterator, loff_t *pos)
+{
+	(*pos)++;
+	if(*pos >= CAPTURE_TRACER_TOTAL_MEASURES 
+		|| *pos >= ((measure_end - measure_start) / sizeof(struct capture_tracer_measure)))
+		return NULL;
+	return (memory_zone + sizeof(struct capture_tracer_measure) * (*pos));
+}
+
+static int capture_tracer_seq_show(struct seq_file *s, void *v)
+{
+	struct capture_tracer_measure *measure = (struct capture_tracer_measure *) v;
+	if(v == SEQ_START_TOKEN)
+		seq_printf(s, "softirq_start\tsoftirq_end\tbudget\tpackets\n")
+	else
+		seq_printf(s, "%12lld\t%12lld\t%3d\t%3d\n", measure->start, measure->end, measure->budget, measure->packets);
+	return 0;
+}
+
+static void capture_tracer_seq_stop(struct seq_file *s, void *v)
+{
+	return;
+}
+\end{lstlisting}
+
+En este trozo de código se pueden observar las diferentes cosas que se han explicado anteriormente. En un principio, la función de start se encarga únicamente de la inicialización, pero tal y como se explica en la documentación en el código de kernel, en caso de retornar el valor \code{SEQ\_START\_TOKEN}, la función de show se comportará de diferente manera.
+
+Es la forma que hay para sacar en la primera línea del fichero una descripción de los campos, tal y como ocurre con la mayoría de los comandos, tales como netstat, ps, etc. Para ello, el código debe asegurarse de que la posición que se le ha provisto con el parámetro \code{loff\_t *poss} es 0.
+
+La función de next, está pensada para no sobrepasar el límite de total de trazas, y a no sobrepasar el número total de trazas capturadas. En caso de devolver NULL esta función no llamará a la función show, ya que se entiende como que el fichero ha llegado a su fín, y el mecanismo interno de \code{seq\_file} sacará el carácter EOF en el fichero.
+
+Por último, la función stop en nuestro caso no hace nada, y se ha decidido escribir (aunque no es necesario) para que si en un futuro es necesaria algún tipo de funcionalidad que requiera de él, la parte en la que insertar el código esté hecha.
+
+Todo esto, se puede unir a el sistema de ficheros procfs a través de las siguiente funciones y estructuras, cuyo único propósito es cumplir con la interfaz interpuesta por el kernel para el manejo de ficheros.
+
+\begin{lstlisting}[caption={Funciones y estructuras utilizadas para cumplir con la interfaz del kernel}, label={seqfile-union}]
+static struct seq_operations capture_tracer_seq_ops = {
+	.start = capture_tracer_seq_start,
+	.next = capture_tracer_seq_next,
+	.stop = capture_tracer_seq_stop,
+	.show = capture_tracer_seq_show
+};
+
+static int capture_tracer_seq_open(struct inode *inode, struct file *file)
+{
+	return seq_open(file, &capture_tracer_seq_ops);
+}
+
+static struct file_operations capture_tracer_file_ops = {
+	.owner = THIS_MODULE,
+	.open = capture_tracer_seq_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release
+};
+\end{lstlisting}
+
+En resumidas cuentas, en la primera estructura se especifican cuales son los campos que estamos rellenado, esta estructura es la propia de la interfaz seq\_file. La función \code{capture\_tracer\_seq\_open} se encarga de cumplir con la interfaz estándar de apertura de ficheros, y por último, la estructura \code{capture\_tracer\_file\_ops} está pensada para especificar las operaciones de fichero posibles para esta interfaz.
+
+Todo esto, se unirá a la entrada en procfs con una línea en la que al crear la entrada, también se le especifique el las operaciones sobre el fichero.
+\begin{lstlisting}[caption={Creación e inicialización del fichero en procfs}, label={seqfile-procfs}]
+proc_create("capture_tracer", 0, NULL, &capture_tracer_file_ops);
+\end{lstlisting}
+
+\section{Interfaz hacia el kernel}
+En esta parte se especificarán cual es la interfaz hacia el kernel. Esto a bajo nivel significa la especificación de los puntos en los que se ha introducido nuevo código para su funcionamiento, y cuales son las modificaciones que aseguran el buen uso de la herramienta.
+
+En un principio, se pensó en hacer este módulo como una parte más del kernel, el problema era que no permitía desactivar su funcionalidad sin un coste. Por ello, se ha llegado a la siguiente solución.
+
+Aprovechando la flexibilidad del lenguaje C, se ha creado en kernel un puntero a función, de tal manera, que a la hora de insertar una medición, solo habrá que comprobar si el puntero está inicializado, y en caso afirmativo, efectuar la llamada. Esta función es la que se encarga de guardar la traza.
+
+Una de las primeras opciones de diseño era efectuar las mediciones con llamadas a función, pero tras un análisis de rendimiento, se vio que tenía un coste demasiado alto. Por ello, los puntos de medida están puestos estáticamente en el código ya que el coste de la medición es infínima, pero se ha hecho opcional la efectuación de la medida.
+
+Al final, el código resultante contiene dos o más mediciones, guardando la medida en la estructura definida específicamente para la creación de trazas, y por último, se efectúa la llamada a la función si el puntero de esta está inicializado.
+
+\begin{lstlisting}[caption={}, label={}]
+static void net_rx_action(struct softirq_action *h)
+{
+	/* ... */
+	struct capture_tracer_measure capture_tracer_measure = {0,0,netdev_budget,0};
+	capture_tracer_measure.start = sched_clock();
+	
+	/* ... */
+	
+	
+	capture_tracer_measure.packets = netdev_budget - budget;
+	capture_tracer_measure.end = sched_clock();
+	if(save_capture_tracer_measure != NULL)
+		save_capture_tracer_measure(&capture_tracer_measure);
+	/* ... */
+}
+\end{lstlisting}
+
+Esta es una parte de como se utiliza el módulo de trazas para medir parámetros por softirq, en la que se extrae el tiempo de inicio y de fin, el número de paquetes que se puede capturar en total en la softirq y el número de paquetes que se han capturado.
+
+Con estas mediciones, guardadas por la función \code{save\_capture\_tracer\_measure}, se puede modelar la llegada de paquetes al sistema. En caso de necesitar otro tipo de trazas, basta con cambiar la estructura \code{struct capture\_tracer\_measure} para que contenga las mediciones que se quieren guardar, y se hagan estas en código.
+
+La estructura se define de la siguiente manera:
+
+\begin{lstlisting}[caption={Definición de la estructura de trazas}, label={struct-capture-tracer}]
+/*
+ * Structure for measuring packet arrival to the system
+ */
+struct capture_tracer_measure {
+	unsigned long long int start;
+	unsigned long long int end;
+	unsigned int budget;
+	unsigned int packets;
+};
+\end{lstlisting}
+
+La última parte de la explicación es sobre como se controla la manera de rellenar el puntero a función. Al contrario de lo que se pueda pensar, al ser la softirq un proceso prioritario, ésta se ejecutará atómicamente, sin opción a que el módulo se descargue mientras está en ejecución.
+
+Por ello, se ha hecho que en la inicialización de la parte de red, en la función \code{net\_dev\_init}, ésta se encargue de inicializar el puntero a función a NULL, y el módulo al cargarse rellene el puntero y al descargarse lo vuelva a poner a NULL. Para evitar fallos, se ha hecho que la inicialización del citado puntero se efectúe al finalizar la inicialización del módulo y que el volver a ponerlo a NULL se haga al principio de la descarga del módulo.
+
+Otra de las opciones era la utilización de las rutinas para discernir entre si un módulo está cargado o no, pero esto requería de mayores accesos a memoria que la simple comprobación de un campo a NULL.
+
+Aunque no se ha mencionado explícitamente, es importante que se tenga en cuenta que en kernel, hay dos tipos de exportaciones de funciones, la primera es la realizada por la llamada estándar \code{extern}, que implica que la función se ha implementado en un fichero .c, y no en el mismo fichero .h en el que está definido, y la segunda es la llamada \code{EXPORT\_SYMBOL} que exporta el objeto para que sea visible para el conjunto de módulos, los cuales no están integrados en el binario del kernel de Linux.
+
+En este caso, se han utilizado ambas llamadas, \code{extern} para señalizar que la función está siendo implementada por un solo fichero, y la llamada \code{EXPORT\_SYMBOL} para indicar que este puntero debía ser accesible a los módulos. Esta llamada \code{EXPORT\_SYMBOL} está hecha en el fichero \code{/net/core/dev.c}.
+
+\section{Funcionamiento interno del módulo}
+Aunque ya se ha explicado gran parte del funcionamiento del módulo, no se ha explicado exactamente el funcionamiento interno de este, por ello, y para una mejor comprensión del mismo, se explicarán las partes que aún no se han explicado.
+
+En la inicialización del módulo, este se encarga de crear la entrada en \code{procfs}, crear una zona de memoria suficiente para almacenar el número de trazas que se especifique a través de la constante \code{CAPTURE\_TRACER\_TOTAL\_MEASURES} y por último, tras inicializar los punteros contador, rellenar el puntero con la dirección de memoria de la función de guardado.
+
+La función de guardado es la siguiente:
+
+\begin{lstlisting}[caption={Función de guardar trazas}, label={capture-tracer-saver}]
+void capture_tracer_saver(struct capture_tracer_measure *m){
+	if (measure_end >= ((struct capture_tracer_measure*)(memory_zone + CAPTURE_TRACER_MEMORY_SIZE )))
+		return;
+	*measure_end=*m;
+	measure_end++;
+
+	return;
+}
+\end{lstlisting}
+
+Como se puede observar, la lógica de guardado es simple. Se recibe un puntero hacia la estructura que contiene los datos a guardar, se pasan a la zona de memoria, y se aumenta el puntero para que esté listo para la siguiente traza.
+
+Por por último al descargar el módulo, vaciará el puntero, liberará la zona de memoria y eliminará la entrada de procfs.

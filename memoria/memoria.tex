@@ -1,9 +1,14 @@
 % !TeX spellcheck = es_ES
-
-\title{Adaptación y extensión de la herramienta de captura y análisis de tráfico Ksensor\\Memoria}
-\author{Javier Domingo Cansino}
-
 \documentclass[11pt,a4paper]{report} % Para tener un documento grande pero sin ser un libro (solo hay esta posibilidad)
+\usepackage{../portada}
+
+\title{Adaptación y extensión de la herramienta de captura y análisis de tráfico Ksensor}
+\author{Javier Domingo Cansino}
+\subtitle{Memoria}
+\director{Armando Ferro Vazquez}
+\proffesor{Luis Zabala Alberdi}
+\codirectortrue
+
 \usepackage[latin1]{inputenc}   % Para la codificación
 \usepackage{textcomp}           % Para los simbolos de euro
 \usepackage[spanish]{babel}     % Para el lenguaje que tenga bien
@@ -19,6 +24,21 @@
 	citecolor=red,				% y los de las citas rojos
 }
 \usepackage[table]{xcolor}      % Dar colores a las tablas
+\usepackage{etoolbox}			% Para el espaciado
+\usepackage[doublespacing]{setspace}
+\usepackage{listings}			% Para formatear código
+\lstset{						% El estilo para formatearlo sera este
+	basicstyle=\small\singlespacing\ttfamily, % La letra tiene que ser pequeña y espaciado simple y monoespaciada
+	keywordstyle=\bfseries\color{blue},		% las palabras clave tienen que estar en azul
+	identifierstyle=\color{black},	% Los identificadores (funciones y variables)
+	commentstyle=\color{gray},		% Los comentarios en gris
+	language=C,						% El lenguaje de programación es C
+	extendedchars=true,				% Usamos más caracteres que los ascii
+	breaklines=true,				% Puede cortar las lineas que ocupen demasiado
+	breakatwhitespace=true,			% 	pero tiene que hacerlo en los espacios en blanco
+	frame=lines,					% Poner lineas al principio y al final del código para acotarlo
+	tabsize=4,
+}
 \usepackage{eurosym}            % para tener el simbolo del euro
 \usepackage{setspace}           % Para hacer el espaciado entre líneas
 \setstretch{1.4}                %      1.4 del espacio normal
@@ -38,12 +58,11 @@
 \titlespacing{\chapter}{0pt}{-80pt}{20pt} %cual es el espacio que deben tener encima
 \usepackage{makeidx}            % Hacer índices
 
-
 % % % % % % % % % % % % % % % % % % % % % % %
 % Sección de comandos personalizados        %
 % % % % % % % % % % % % % % % % % % % % % % %
 \newcommand{\reference}[2]{\hyperref[#1]{\textit{\ref*{#1} #2}}}
-
+\newcommand{\code}[1]{\texttt{#1}}
 \makeindex
 
 \begin{document}

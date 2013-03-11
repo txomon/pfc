@@ -20,7 +20,7 @@ Aunque había manera de saber cuales eran las estructuras \code{struct napi\_stru
 
 En este caso, la afinidad del dispositivo dio bastantes problemas porque ha desaparecido el array \code{irq\_desc} que daba una información concreta y fácil de interpretar sobre el estado de la afinidad.
 
-Actualmente, tras investigaciones en el resto del código, se han encontrado otras implementaciones del cambio de afinidad y gracias a ello, este cambio ya no tiene mayor problema, puesto que podemos aprovechar el código que se utiliza en \code{/proc/irq/\#\#/smp\_affinity}. Este se puede adaptar para el cambio de afinidad de las interfaces. Es importante hacer algunas comprobaciones del estado de las CPUs. El resultado es este:
+Actualmente, tras investigaciones en el resto del código del kernel actual, se han encontrado otras implementaciones del cambio de afinidad y gracias a ello, este cambio ya no tiene mayor problema, ya que se puede aprovechar el código que se utiliza en \code{/proc/irq/\#\#/smp\_affinity}. Este se puede adaptar para el cambio de afinidad de las interfaces. Es importante hacer algunas comprobaciones del estado de las CPUs. El resultado es este:
 
 \begin{lstlisting}[caption={Código para cambiar la afinidad de un dispositivo de red}, label=set-device-affinity]
 static int set_device_affinity(struct net_device *dev, int cpu_id)
@@ -50,7 +50,7 @@ En definitiva este código proporciona una interfaz actualizada al resto del códi
 En lo referente al cambio de afinidad de los hilos de análisis las funciones no han sufrido modificaciones, por lo que se pueden utilizar como están.
 
 \subsection{Promiscuidad del dispositivo}
-La última de las necesidades citadas en el diseño nivel es poder ordenarle a la tarjeta que capture todos los paquetes que pasen por su enlace. Esta funcionalidad no ha cambiado desde la implementación del proyecto \cite{KABO05},
+La última de las necesidades citadas en el diseño nivel es poder ordenarle a la tarjeta que capture todos los paquetes que pasen por su enlace. Esta funcionalidad no ha cambiado desde la implementación del proyecto \cite{KABO05}, y se puede mantener la misma estructura.
 
 \section{Mejoras de Ksensor}
 En esta sección se explicarán algunas mejoras respecto al anterior código para mejorar el rendimiento. Se seguirá el orden en el documento de alto nivel para una mejor compresión.

@@ -1,0 +1,88 @@
+\chapter{Diseño de la integración}
+
+En este capítulo se va a explicar como se integran los diferentes módulos entre sí y con el kernel original. Teniendo en consideración el diagrama de este apartado en el diseño de alto nivel, se ha planeado dicha integración como una serie de parámetros, dependientes unos de otros, de manera que dependiendo lo que se especifique, se puede elegir los módulos que se van a compilar, y con todas las funcionalidades posibles.
+
+Aunque esta sección habla de la integración existente de los módulos, se va a evitar explicar lo que compete a la parte de estandarización. Por lo tanto, se especificará la manera en la que estos módulos activan funcionalidades en otros, pero se dejará de lado la forma en la que se fusionan.
+
+\section{Módulo de estadísticas y Ksensor}
+El módulo de estadísticas recoge datos de tiempos que tarda Ksensor, tanto en encolar paquetes como en sacarlos de la cola. La manera de hacerlo es simple:
+
+\begin{lstlisting}[caption={Estadística de medición del desencolado de un paquete}, label={stats-dequeue-ksensor}]
+struct sk_buff *dequeue_skb_ksensor(void)
+{
+	unsigned long long int start_time;
+	
+	start_time=sched_clock();
+	
+	/* ... */
+	
+	skb->napi->capture_stats.dequeue_time += (sched_clock() - start_time);
+	return skb;
+}
+\end{lstlisting}
+
+Como se puede observar, en este caso, el parámetro que se ha utilizado para guardar la medida, napi, se ha añadido, ya que al haber hecho las mejoras de Ksensor para su adaptación a dispositivos multicolas, la cola de la que se ha extraído el paquete también es importante.
+
+Esto se ha hecho añadiendo un puntero a estructura \code{struct napi\_struct} en el descriptor de buffer de paquete \code{struct sk\_buff}.
+
+\begin{lstlisting}[caption={Modificación a la estructura sk\_buff para filtrado por cola}, label={stats-skbuff}]
+struct sk_buff {
+	/* These two members must be first. */
+	struct sk_buff		*next;
+	struct sk_buff		*prev;
+
+	ktime_t			tstamp;
+
+	struct sock		*sk;
+	struct net_device	*dev;
+	struct napi_struct	*napi;
+
+	/* ... */
+}
+\end{lstlisting}
+
+\section{Módulo de estadísticas y módulo de trazas}
+
+Aunque el como se ha explicado antes el módulo de trazas es totalmente independiente del resto de las aplicaciones de NQaS, si que comparte mediciones en las trazas actuales con el módulo de estadísticas. Por ello, las mediciones realizadas con \code{sched\_clock} han sido dispuestas en variables a parte.
+
+Como ejemplo, se comparte la medida de tiempos en la softirq, \code{net\_rx\_action}, de la siguiente manera
+
+\begin{lstlisting}[caption={Integración entre el módulo de estadísticas y trazas}, label={stats-tracer-integration}]
+static void net_rx_action(struct softirq_action *h)
+{
+#if IS_ENABLED(CONFIG_NQAS_CAPTURE_TRACER) ||IS_ENABLED(CONFIG_NQAS_STATS)
+	unsigned long long int time_start;
+#endif /* CONFIG_NQAS_CAPTURE_TRACER || CONFIG_NQAS_STATS */
+#if IS_ENABLED(CONFIG_NQAS_CAPTURE_TRACER)
+	struct capture_tracer_measure capture_tracer_measure = {0,0,netdev_budget,0};
+#endif  /* CONFIG_NQAS_CAPTURE_TRACER */
+
+#if IS_ENABLED(CONFIG_NQAS_CAPTURE_TRACER) ||IS_ENABLED(CONFIG_NQAS_STATS)
+	time_start=sched_clock();
+#endif /* CONFIG_NQAS_CAPTURE_TRACER || CONFIG_NQAS_STATS */
+
+	/* ... */
+
+#if IS_ENABLED(CONFIG_NQAS_CAPTURE_TRACER) ||IS_ENABLED(CONFIG_NQAS_STATS)
+	time_end = sched_clock();
+#endif /* CONFIG_NQAS_CAPTURE_TRACER || CONFIG_NQAS_STATS */
+#if IS_ENABLED(CONFIG_NQAS_STATS)
+	list_for_each_entry(n, &sd->polled_list, polled_list) {
+		n->capture_stats.softirq_ac += time_end - time_start;
+		n->capture_stats.softirq_num++;
+	}
+#endif /* CONFIG_NQAS_STATS */
+
+#if IS_ENABLED(CONFIG_NQAS_CAPTURE_TRACER)
+	capture_tracer_measure.end = time_end;
+	capture_tracer_measure.packets = netdev_budget - budget;
+	if(save_capture_tracer_measure != NULL)
+		save_capture_tracer_measure(&capture_tracer_measure);
+#endif /* CONFIG_NQAS_CAPTURE_TRACER */
+	return;
+}
+\end{lstlisting}
+
+En este caso, nos aprovechamos de que el compilador dependiendo de las etiquetas que compila, eliminará las variables que no tengan sentido, como por ejemplo, si estamos compilando las estadísticas, eliminará la variable \code{time\_end}, e incluso seguramente, elimine también \code{time\_start}.
+
+Aunque se hayan mostrado los flags de compilación en este trozo de código, corresponde a la parte de estandarización explicar su uso y configuración.
