@@ -54,8 +54,88 @@ En este punto se estudian las diferentes alternativas de migración que se tendrá
 
 Para cada alternativa se establecerán diversos criterios que nos permitirán seleccionar la opción más apropiada. Se tendrán en cuenta también los requerimientos iniciales señalados en el apartado \reference{sec:especificaciones-y-requerimientos-básicos}{Especificaciones y requerimientos básicos}.
 
+\subsection{Métodos para enviar información usuario}
+Con objetivo de pasar al usuario información de distinta índole, es necesario hacer un estudio de las diferentes opciones que hay disponibles actualmente.  A continuación se explicarán de una forma breve cuales son los diferentes sistemas que se utilizan en Linux, ya que aunque para sacar poca información está bien utilizar la salida estándar de mensajes en kernel, para sacar mucha información es totalmente ineficaz.
+
+\subsubsection{Estudio de las alternativas}
+\begin{description}
+\item [Mensaje por salida estándar]
+La forma más fácil, que no requiere ningún tipo de programación ni configuración es la salida estándar del sistema, a través de la función printk, la cual almacena la salida en \code{/var/log/} en los diferentes ficheros relativos al kernel que se pueden encontrar ahí, todo depende de la prioridad que se le de al mensaje.
+
+El problema con este tipo de salida es que está mezclado con el resto de salidas del kernel, y por lo tanto requiere de una lógica de filtrado en el lector. Además, tiene unos búferes muy ajustados, y requiere de un gran procesamiento.
+
+\item [Fichero virtual utilizando procfs estándar]
+La forma más común de sacar información del kernel es a través de ficheros en el sistema de ficheros de \textit{/proc}, procfs. Es el sistema más sencillo, y es el que se utiliza para la mayoría de las transacciones para proveer información a los programas. Por ejemplo, todos los procesos que hay en el sistema junto se representan en una carpeta virtual en /proc/<pid>.
+
+De ahí, aplicaciones como \textit{ps}, \textit{top}, \textit{gnome-system-monitor}, etc. utilizan esta interfaz para informarse sobre los procesos existentes. Actualmente, Ksensor utiliza esa misma interfaz para sacar información de estadísticas internas e información varia, como las interfaces actuales de captura o el estado del mismo.
+
+El problema de esta implementación es que el fichero debe ser generado completamente cada vez que se requiere, lo cual es aceptable para ficheros cortos, pero impensable para, por ejemplo el módulo de traceo, que necesita tener ficheros virtuales de cientos de megas.
+
+\item [Fichero virtual con seq\_file]
+Esta implementación de fichero virtual permite recorrer de una manera iterativa una secuencia sin predefinir. Está pensada con una función inicializadora, una función para pasar al siguiente punto, una función para mostrar y una última función para terminar.
+
+Esta interfaz permite que se pueda crear el fichero bajo demanda, e incluso, se le instruya al kernel que solo genere las entradas específicas que se van a consultar.
+
+\item [Fichero físico]
+Una opción que es digna de mención por ser la opción más directa es guardar datos en ficheros físicos. Es una opción que tiene bastantes problemas de implementación, ya que al estar dentro del sistema operativo, tienes que tratar con una interfaz interna a ficheros.
+
+Por otra parte, esta solución sería adecuada en caso de requerir guardar ficheros de gran tamaño. Si bien es cierto que el disco duro tiene un acceso muy lento, es la única alternativa cuando el tamaño supera la memoria física del ordenador
+
+\end{description}
+
+\subsubsection{Criterio de la selección}
+A la hora de seleccionar entre las diferentes alternativas disponibles la solución óptima a este problema se plantea una variable a tener en cuenta de dimensionamiento. Por una parte, el traceador está pensado para hacer gran cantidad de medidas y estas requieren de ficheros grandes, por otro lado, las estadísticas contienen valores de diferentes tipos pero sin ninguna relación entre ellos necesariamente.
+
+Debido a lo expuesto anteriormente, se crearán criterios respecto al tamaño de la información que se va a sacar, la complejidad de la programación de la interfaz y la efectividad de la comunicación, expuestos a continuación
+
+\begin{description}
+\item[Tamaño de los datos [40\%]]
+Este es el parámetro más importante para la selección de un criterio adecuado. En él queda reflejada la dimensión que debe tener el fichero para justificar su uso. 
+
+\item[Complejidad y rendimiento [30\%]]
+Aunque puedan ser igualmente efectivas unas salidas que otras, siempre suele haber una interfaz que es más difícil de implementar que otra, añadiendo un sobrecoste en caso de no ser necesaria. Además, también debe tenerse en cuenta que puede ser más sencilla, pero tener un coste desmesurado en el rendimiento.
+
+\item[Facilidad de uso[30\%]]
+Este componente es clave en la elección de la interfaz, ya que representa la facilidad que el usuario tiene para utilizar la interfaz y la efectividad de la comunicación. Por ejemplo, no sería igual de sencilla implementar la salida de datos a través de un puerto serie, el cual necesitaría de un dispositivo externo para su realización, que crear un fichero en el cual el usuario pueda leer los datos que le interesen, con utilidades estándar del sistema, como pueden ser awk, sed, cat, etc.
+\end{description}
+
+\subsubsection{Selección de la solución}
+Como son diferentes las necesidades de la solución, se han dispuesto los casos necesarios:
+
+\paragraph{En caso de salida de menos de 500MB y más de 1KB}
+\begin{center}
+\rowcolors{1}{gray}{white}
+\begin{tabular}{|c*{5}{c|}}
+\hline Criterio                  & Ponderación & printk & procfs & seq\_file & inode \\ 
+\hiderowcolors
+\hline Tamaño de los datos       &    40\%     &  0/40  & 10/40  &  35/40   & 40/40 \\ 
+\hline Complejidad y rendimiento &    30\%     & 10/30  & 25/30  &  25/30   & 20/30 \\
+\hline Facilidad                 &    30\%     & 10/30  & 30/30  &  30/30   & 20/30 \\
+\hline Total               &    100\%    & 20/100 & 65/100 &  90/100  & 80/100\\
+\hline 
+\end{tabular}
+\end{center}
+
+\paragraph{En caso de salida de menos de 1KB}
+\begin{center}
+\rowcolors{1}{gray}{white}
+\begin{tabular}{|c*{5}{c|}}
+\hline Criterio                  & Ponderación & printk & procfs & seq\_file & inode \\ 
+\hiderowcolors
+\hline Tamaño de los datos       &    40\%     & 30/40  & 40/40  &  25/40   & 0/40 \\ 
+\hline Complejidad y rendimiento &    30\%     & 15/30  & 30/30  &  25/30   & 0/30 \\
+\hline Facilidad                 &    30\%     & 20/30  & 30/30  &  30/30   & 20/30 \\
+\hline Total               &    100\%    & 65/100 &100/100 &  80/100  & 20/100\\
+\hline 
+\end{tabular}
+\end{center}
+
+Se ha decidido utilizar la interfaz de seq\_file para el módulo de trazas. Una implementación que se espera sea suficiente con sacar un máximo de 500MB de datos. Actualmente, con las necesidades de guardar información, los archivos de salida de las pruebas de modelado se estima sean de 5000000 líneas, 50MB de datos.
+
+En el caso de tener salidas de menos de 1KB, como en el caso del módulo de estadísticas, se utilizará la interfaz normal de procfs, la cual se utiliza actualmente en la aplicación Ksensor.
+
 \subsection{Sistema de control de versiones}
-En primer lugar, debe decidirse cual es el sistema de control de versiones más adecuado para el proyecto. Esta decisión es muy importante porque hará depender en gran medida las posibilidades de integración con el kernel oficial.
+Debe decidirse cual es el sistema de control de versiones más adecuado para el proyecto. Esta decisión es muy importante porque hará depender en gran medida las posibilidades de integración con el kernel oficial.
 
 La herramienta electa debe ser eficaz para tamaños de repositorios grandes, flexibilidad de trabajo, opciones de sincronización con otros repositorios. Estas necesidades se especificarán en la sección \reference{scv-criterios}{Criterios de selección}. Es necesario por lo tanto aclarar algunos términos que se van a utilizar en los siguientes puntos con regularidad.
 

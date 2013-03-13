@@ -3,7 +3,7 @@
 
 \chapter{Objetivos}
 \label{cha:objetivos}
-El objetivo principal del proyecto es la \textbf{adaptación del programa Ksensor y modificaciones asociadas en kernel a una versión actual y el desarrollo de herramientas para la validación del prototipo}. El diseño actual es el descrito en el proyecto KSENSOR\cite{KABO05}.
+El objetivo principal del proyecto es la \textbf{adaptación de la sonda Ksensor y sus modificaciones en kernel a una versión actual y el desarrollo de herramientas para la validación del prototipo}. El diseño actual es el descrito en el proyecto KSENSOR\cite{KABO05}.
 
 Por lo tanto, los objetivos a conseguir mediante este proyecto son:
 
@@ -20,7 +20,7 @@ Ksensor debe optimizar el proceso de captura de los paquetes, eliminando si es p
 El kernel de Linux es de propósito general, por lo que no está específicamente diseñado para realizar una captura eficiente del tráfico. Ya que la mayor parte de los sistemas de análisis de tráfico a nivel de usuario se apoyan para realizar la captura en las facilidades proporcionadas por sistemas operativos de propósito general, su rendimiento no es óptimo. La sonda que se propone en este proyecto debe, al trabajar directamente desde el nivel de kernel, resolver dichas ineficiencias, evitando por ejemplo capturar paquetes que posteriormente no pueda analizar, lo cual sin duda degrada el rendimiento.
 
 \section{Paralelización del análisis}
-El análisis del tráfico en redes de alta velocidad es un proceso costoso, que le exige a la sonda un alto rendimiento y una capacidad de procesamiento que no se puede conseguir con las arquitecturas convencionales. Con el fin de acomodar ksensor a las necesidades de procesamiento requeridas por la red, en este proyecto se propone mejorar las prestaciones de una máquina aumentando el número de procesadores que ejecutan análisis de red.
+El análisis del tráfico en redes de alta velocidad es un proceso costoso, que le exige a la sonda un alto rendimiento y una capacidad de procesamiento que no se puede conseguir con las arquitecturas convencionales. Con el fin de acomodar ksensor a las necesidades de procesamiento requeridas por la red, en este proyecto se propone mejorar el rendimiento de una máquina aumentando el número de procesadores que ejecutan análisis de red.
 
 Así pues, con un diseño en base a plataformas multiprocesador, se podrá disponer de múltiples instancias de análisis en la sonda, trabajando de forma concurrente sobre el tráfico capturado. El sistema diseñado deberá permitir, en la medida de lo posible, el paralelismo en el procesado de los paquetes, a fin de obtener un alto rendimiento. Se deberá resolver también, la sincronización en el acceso a la información compartida entre instancias.
 

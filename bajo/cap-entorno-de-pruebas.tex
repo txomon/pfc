@@ -1,5 +1,17 @@
 \chapter{Entorno de pruebas}
 
-En este capítulo, se describirán los dos programas que permiten al entorno de pruebas utilizar los módulos desarrollados en este proyecto, el módulo de estadísticas y el módulo de traceo.
+En este capítulo, se describirán los dos programas que permiten al entorno de pruebas utilizar los módulos desarrollados en este proyecto, el módulo de estadísticas y el módulo de traceo. Se explicará brevemente los comandos que se han utilizado, y cual es el orden que se sigue.
 
-Se explicarán en secciones separadas y se desarrollará la lógica que se ha seguido para su integración con el agente de la sonda.
+\section{Módulo de estadísticas}
+
+El script, demonio, está programado en Bash, ya que es un script trivial, que necesita utilizar de varios comandos del sistema, tales como modprobe, rmmod, sudo, etc. Primero se consigue el directorio de estadísticas de la interfaz que nos interesa, en este caso, nos podemos aprovechar del fichero que crea Ksensor, \code{/proc/ksensor/iface} ya que en él se describe cual es la interfaz de captura que interesa.
+
+Esto se puede hacer con una línea en la que se lea el fichero, y se corte la salida \code{cat /proc/ksensor/iface | cut -c1-4}. Después en caso de recibir el parámetro start, deberá cargar el módulo, con \code{modprobe times}, y después resetear las estadísticas, con un \code{echo 1> /proc/capture\_stats/reset}.
+
+En caso de recibir el parámetro stop, deberán sacarse todas las estadísticas de la interfaz, por ejemplo, utilizando el comando \code{grep -G -R ".*" /proc/capture\_stats/\$iface} se puede conseguir sacar todos los parametros separados por dos puntos. Además este deberá descargar el módulo del sistema, utilizando \code{rmmod capture\_stats}.
+
+\section{Módulo de trazas}
+
+La arquitectura actual no está preparada para pasar un volumen tan grande de trazas, como por ejemplo las que salen utilizando este sistema para tracear las softirqs. Por ello, en vez de sacar las trazas por la arquitectura, se sacarán las trazas a un fichero local, y utilizando la fecha y hora de las mismas.
+
+Para esto, se carga el módulo con \code{modprobe} cuando así se lo indica el demonio, después, antes de sacar el módulo, se descarga el contenido del fichero con un \code{cat /proc/capture\_tracer > fichero\_temporal}, colocándolo en una carpeta con la fecha de la prueba asociada.

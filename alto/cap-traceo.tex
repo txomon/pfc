@@ -5,7 +5,7 @@ El módulo de traceo es como su nombre indica un módulo para sacar trazas del sis
 
 La interfaz que debe usarse de cara al usuario debe ser lo más estándar posible. Una de las posibilidades sería el uso de la interfaz que el proyecto \cite{AABS05} provee, a través de la librería de memoria compartida, utilizando también la librería parser, seríamos capaces de conseguir la información.
 
-Esta alternativa no es una opción, la utilización de una interfaz personal dificultaría la liberación y aceptación del código del módulo. Por eso mismo, se ha elegido la interfaz seq\_file descrita en \reference{sec:info-usuario}{Métodos para enviar información al usuario}, ya que permite a un programa externo interactuar con las trazas sin necesidad de tener una interfaz personalizada, de cara al usuario.
+Esta alternativa no es una opción, la utilización de una interfaz personal dificultaría la liberación y aceptación del código del módulo. Por eso mismo, se ha elegido la interfaz seq\_file descrita en el análisis de alternativas del documento de Memoria, ya que permite a un programa externo interactuar con las trazas sin necesidad de tener una interfaz personalizada, de cara al usuario.
 
 Aunque las interfaces para efectuar trazas pudieran ser variables en parámetros, se ha simplificado el diseño para evitar que la carga introducida por la función que guarda el valor tenga mayor impacto en el funcionamiento. Este primer diseño no requerirá por lo tanto de grandes trozos de código, y el usuario podrá utilizar la misma lógica para parsear cada uno de las líneas del fichero.
 

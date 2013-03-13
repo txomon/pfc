@@ -1,7 +1,7 @@
 % !TeX spellcheck = es_ES
 % !TeX root = main.tex
 
-\chapter{Necesidades del sistema}
+\chapter{Especificación de necesidades del sistema}
 La complejidad del sistema que se quiere implementar exige que se elabore con detalle un conjunto de especificaciones de las necesidades del mismo, estando éstas reguladas por los objetivos que se plantearon en el capítulo \reference{cha:objetivos}{Objetivos}. Estas especificaciones servirán de gran utilidad y ayuda como guía para el posterior diseño del sistema, y asimismo, se utilizarán para marcar cuáles son los límites del desarrollo del prototipo.
 
 En este capítulo se desarrollarán las especificaciones bajo dos puntos de vista. Por una parte, atendiendo a las necesidades de los posibles entornos de aplicación de los resultados del proyecto, y por el otro, a las especificaciones funcionales de los elementos de la arquitectura. Primeramente, se describirá el sistema de forma general para que las especificaciones resulten más fáciles de entender.
@@ -11,11 +11,11 @@ Este proyecto tiene como principal objetivo el rediseño y reimplementación de un
 
 Por lo tanto, las especificaciones iniciales que se fijen tienen considerable importancia, ya que de su precisión y exigencia dependerá en gran medida el éxito o fracaso del proyecto.
 
-A partir del diseño realizado se va a desarrollar un prototipo del sensor, el cual debe satisfacer las especificaciones funcionales que se indican en este capítulo. Mediante el prototipo se desea comprobar la funcionalidad del sistema y realizar una serie de pruebas orientadas a validar la hipótesis de partida del proyecto, esto es, la mejora de prestaciones con respecto a Ksensor, a través de la migración de la sonda a una nueva versión de kernel y la aplicación de correcciones para eliminar algunos defectos observados.
+A partir del diseño realizado se va a desarrollar unas modificaciones en el sensor, el cual debe satisfacer las especificaciones funcionales que se indican en este capítulo. Mediante el prototipo se desea comprobar la funcionalidad del sistema y realizar una serie de pruebas orientadas a validar la hipótesis de partida del proyecto, esto es, la mejora de prestaciones con respecto al anterior Ksensor y su validación, a través de la migración de la sonda a una nueva versión de kernel y la aplicación de correcciones para eliminar defectos observados.
 
-En el documento Pliego de Condiciones se establecerán en detalle cuáles son las pruebas de validación que el prototipo a desarrollar debe cumplir. El plan de pruebas se definirá antes de la implementación y se empleará para demostrar que el prototipo cumple el conjunto de especificaciones funcionales indicadas, que, lógicamente, no tienen por qué ser todas las que se imponen para el diseño global del proyecto.
+En el documento Pliego de Condiciones se establecerán cuáles son las pruebas de validación que el prototipo a desarrollar debe cumplir. El plan de pruebas se definirá antes de la implementación y se empleará para demostrar que el prototipo cumple el conjunto de especificaciones funcionales indicadas en el anterior proyecto\cite{KABO05}, que lógicamente, no tienen por qué ser todas las que se impusieron para el diseño global del proyecto, sino para la implementación efectuada.
 
-Por otro lado, una vez validado el prototipo, se procederá a realizar una serie de pruebas de rendimiento en el sensor, con el objeto de poder evaluar la mejora de prestaciones que se obtiene en Ksensor gracias a la actualización. El plan de pruebas a seguir se definirá en el documento Estudio Comparativo de Rendimientos, en el cual se realizará también un estudio comparativo a partir de los resultados obtenidos.
+Por otro lado, una vez validado el prototipo, se procederá a realizar una serie de pruebas de rendimiento en el sensor, con el objeto de poder evaluar la mejora de prestaciones que se obtiene en Ksensor gracias a la actualización. El plan de pruebas a seguir se definirá en el documento \textit{Estudio comparativo de rendimientos}, en el cual se realizará también un estudio comparativo a partir de los resultados obtenidos.
 
 \section{Especificaciones de los entornos de aplicación}
 Los resultados de este proyecto deben estar enfocados para dar solución a las necesidades que se plantean en el ámbito de la investigación sobre la mejora de rendimientos en el análisis de tráfico eficiente en redes de datos. En este sentido, los entornos de aplicación que se plantean son los siguientes:
@@ -41,9 +41,9 @@ A continuación se describe el escenario en el que se desarrollará el Ksensor. Se
 \item[Inyector] Esta máquina se utilizará como inyector de tráfico en las pruebas de validación del prototipo, así como en las pruebas de rendimiento.
 \end{description}
 
-La sonda y el inyector estarán conectados entre sí a través de un switch, en el que sólo estarán conectadas estas dos máquinas, para poder controlar el tráfico que se introduce en la red de captura. Ambas máquinas se gestionarán desde el gestor, utilizando una interfaz de red distinta. Se utilizará esta configuración para llevar a cabo el plan de pruebas de validación definido en el Pliego de Condiciones.
+La sonda y el inyector estarán conectados entre sí a través de un switch, en el que sólo estarán conectadas estas dos máquinas, para poder controlar el tráfico que se introduce en la red de captura. Ambas máquinas se gestionarán desde el gestor, utilizando una interfaz de red distinta. Se utilizará esta configuración para llevar a cabo el plan de pruebas de validación.
 
-La sonda se configurará de tal manera que, cuando se produzca un error, se saque en los ficheros de registros \textit{logs} el mensaje correspondiente a través del kernel. Por defecto, el mensaje se imprime en la pantalla y se vuelca a un fichero de \textit{logs}, gracias a la aplicación syslogd.
+La sonda se configurará de tal manera que, cuando se produzca un error, se saque en los ficheros de registros \textit{logs} el mensaje correspondiente a través del kernel. Por defecto, el mensaje se imprime en la pantalla y se vuelca a un fichero de \textit{logs}, gracias a la aplicación syslogd, utilizando el sistema de salida estándar a través de la función \code{printk}.
 
 No obstante, si el error es grave y el sistema colapsa (la máquina deja de responder) los mensajes no se almacenarán, con lo cual se pierde el motivo por el que se produjo el error. Para evitar esto, se podría utilizar el mecanismo netconsole implementado en Linux, mediante el cual se envían los mensajes por medio de paquetes UDP, antes de que el sistema se cuelgue. La estación de trabajo (gestor) sería el receptor o servidor de dichos mensajes, mientras que la sonda sería el cliente.
 
@@ -71,20 +71,17 @@ Así pues, en esta configuración se conectarán dos máquinas al switch: una para e
 
 Una vez planteado el escenario en el que se realizarán las pruebas de rendimiento, se pueden definir ya las especificaciones que se deben tener en consideración:
 \begin{itemize}
-\item La arquitectura de pruebas del sensor se basará en la plataforma genérica
-para la automatización de pruebas diseñada en [BEAU05].
-\item El sistema ha de ser capaz de lanzar baterías de pruebas, configurando de
-forma automatizada todos los agentes que participan en la prueba.
-\item Se desarrollará un agente para facilitar el encendido y apagado de ksensor
-de forma automatizada.
-\item Se proveerán las utilidades necesarias para configurar los parámetros del
-sensor y del inyector, así como para obtener la información relativa a todos
-los agentes que participan en la comunicación.
+\item La arquitectura de pruebas del sensor se basará en la plataforma para la automatización de pruebas diseñada en \cite{KABO05}.
+\item El sistema ha de ser capaz de lanzar baterías de pruebas, configurando de forma automatizada todos los agentes que participan en la prueba.
+\item Se desarrollará un agente para facilitar el encendido y apagado de Ksensor y sus módulos adicionales de forma automatizada.
+\item Se proveerán las utilidades necesarias para configurar los parámetros de la sonda y del inyector, así como para obtener la información relativa a todos los agentes que participan en la comunicación.
 \begin{itemize}
-\item Parámetros de funcionamiento del sensor.
+\item Parámetros de funcionamiento de la sonda.
 \begin{itemize}
 \item Modos de captura.
-\item Parámetros de la cola de paquetes.
+\item Parámetros de la cola de paquetes de Ksensor.
+\item Estadísticas que extraer.
+\item Número de trazas a guardar.
 \end{itemize}
 \item Parámetros de funcionamiento del inyector
 \begin{itemize}
@@ -93,22 +90,20 @@ los agentes que participan en la comunicación.
 \item Estadísticas de las interfaces de red.
 \item Estadísticas del switch.
 \end{itemize}
-\item Se deben diseñar plantillas de pruebas para facilitar la realización de prue-
-bas de rendimiento en laboratorio. Mediante estas plantillas se indicarán los
-parámetros con los que se van a ejecutar los agentes.
+\item Se deben diseñar plantillas de pruebas para facilitar la realización de pruebas de rendimiento en laboratorio. Mediante estas plantillas se indicarán los parámetros con los que se van a ejecutar los agentes.
 \end{itemize}
 
 \subsection{Entorno de análisis comparativo}
-A partir de los resultados obtenidos en las pruebas de rendimiento se puede realizar un estudio comparativo, con el fin de evaluar la mejora de prestaciones de ksensor. Para ello, se hace necesario definir primeramente un plan de las pruebas que se deben realizar, ya que de su precisión y exigencia dependerá en gran medida el rigor de las conclusiones que se vayan a obtener. El plan de pruebas se detalla en la sección Plan de Pruebas en el documento Estudio Comparativo de Rendimientos, pero en este apartado se aportarán una serie de especificaciones iniciales de las mismas.
+A partir de los resultados obtenidos en las pruebas de rendimiento se puede realizar un estudio comparativo, con el fin de evaluar la mejora de prestaciones de Ksensor. Para ello, se hace necesario definir primeramente un plan de las pruebas que se deben realizar, ya que de su precisión y exigencia dependerá en gran medida el rigor de las conclusiones que se vayan a obtener. 
 
-Las pruebas de rendimiento que se realicen deben permitir cuantificar el throughput (tasa de paquetes procesados) al ser sometidos a diferentes tasas de inyección, especialmente para cargas de tráfico elevadas, con el objeto de poder conocer su comportamiento en redes de alta velocidad. Las pruebas deben facilitar, asimismo, conocer los parámetros de configuración óptimos en las diferentes versiones de ksensor. A partir de los resultados que se obtengan, se podrán realizar gráficas comparativas, utilizando las herramientas necesarias para dicha tarea.
+Las pruebas de rendimiento que se realicen deben permitir cuantificar el throughput (tasa de paquetes procesados) al ser sometidos a diferentes tasas de inyección, especialmente para cargas de tráfico elevadas, con el objeto de poder conocer su comportamiento en redes de alta velocidad. Las pruebas deben facilitar, asimismo, conocer los parámetros de configuración óptimos en las diferentes versiones de Ksensor. A partir de los resultados que se obtengan, se podrán realizar gráficas comparativas, utilizando las herramientas necesarias para dicha tarea.
 
 Por tanto, las especificaciones que se han de tener en cuenta al realizar el análisis comparativo entre las diferentes versiones son:
 \begin{itemize}
 \item Se deben identificar los parámetros susceptibles de estudio.
 \item Se deben definir los prototipos de ensayo, a fin de realizar:
 \begin{itemize}
-\item Comparativa de las diferentes versiones de ksensor.
+\item Comparativa de las diferentes versiones de Ksensor.
 \item Comparativa de las diferencias entre los controles de congestión.
 \item Comparativa de rendimiento para diferente número de procesadores.
 \end{itemize}
@@ -119,34 +114,34 @@ Por tanto, las especificaciones que se han de tener en cuenta al realizar el aná
 \subsection{Especificaciones funcionales del sistema}
 En esta sección se pretende ofrecer una descripción de las especificaciones o requerimientos que deben fijarse para el diseño del sistema, de modo que el cumplimiento de éstas conduzca a la consecución de los objetivos planteados al comienzo del presente documento.
 
-Los módulos que se relatan tienen valía por si mismos, ya que no son de uso exclusivo junto con Ksensor, y por lo tanto, los requerimientos irán orientados hacia un uso más general que Ksensor. A continuación, se desglosarán las características más importantes de todos los módulos nuevos y se mencionarán las especificaciones de cada uno de ellos:
+Los módulos que se relatan tienen valía por si mismos, pero han sido diseñados para aportar datos sobre el rendimiento del sistema con Ksensor, aunque no son de uso exclusivo junto con Ksensor, y por lo tanto, los requerimientos irán orientados también hacia un uso más general que para con Ksensor. A continuación, se desglosarán las características más importantes de todos los módulos nuevos y se mencionarán las especificaciones de cada uno de ellos:
 \begin{itemize}
-\item Módulo estadísticas.
-\item Módulo traceo.
+\item Módulo de estadísticas.
+\item Módulo de trazas.
 \end{itemize}
 
 \subsection{Módulo de estadísticas}
-El módulo de estadísticas de que se va a implementar debe hacer mediciones sobre los parámetros que se considerarán a continuación. También deberá proveer una interfaz sencilla de acceso a los mísmos, permitiendo la recogida de datos después de cada prueba.
+El módulo de estadísticas de que se va a implementar debe hacer mediciones sobre los parámetros que se considerarán a continuación. También deberá proveer una interfaz sencilla de acceso a los mismos, permitiendo la recogida de datos después de cada prueba.
 
 Los datos relevantes a ser estudiados deberían ser:
 \begin{itemize}
 \item Los tiempos totales empleados en:
-\begin{itemize}
-\item Rutinas de servicio a la interrupción de captura de red.
-\item Captura de paquetes por interfaz.
-\item Capturar cada paquete.
-\end{itemize}
+	\begin{itemize}
+	\item Rutinas de servicio a la interrupción de captura de red.
+	\item Captura de paquetes por interfaz.
+	\item Capturar cada paquete.
+	\end{itemize}
 \item Números absolutos de:
-\begin{itemize}
-\item Rutinas de servicio a la interrupción de captura de red.
-\item Capturas de paquetes por cada interfaz.
-\item Paquetes procesados para su captura.
-\end{itemize}
+	\begin{itemize}
+	\item Rutinas de servicio a la interrupción de captura de red.
+	\item Capturas de paquetes por cada interfaz.
+	\item Paquetes procesados para su captura.
+	\end{itemize}
 \end{itemize}
 
 
-\subsection{Módulo de traceo}
-La finalidad del módulo de traceo es, como su propio nombre indica, llevar a cabo trazas. Debe ser hecho de una manera simple, extensible y modular. La idea detrás de este módulo es que se pueda ampliar para posibles necesidades de trazas que puedan surgir. Incluso, si en algún momento fuera necesario, añadir varias trazas diferentes utilizando el mismo sistema.
+\subsection{Módulo de trazas}
+La finalidad del módulo de trazas es, como su propio nombre indica, llevar a cabo trazas. Debe ser hecho de una manera simple, extensible y modular. La idea detrás de este módulo es que se pueda ampliar para posibles necesidades de trazas que puedan surgir. Incluso, si en algún momento fuera necesario, añadir varias trazas diferentes utilizando el mismo sistema.
 
 La existencia de este módulo se propone como manera de comprobar modelos teóricos de como los paquetes son recibidos en el sistema, pero pueden ser utilizados con muchos otros fines.
 

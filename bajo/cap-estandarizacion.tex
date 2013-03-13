@@ -1,0 +1,136 @@
+\chapter{Estandarización}
+
+En este capítulo se va a explicar la implementación de las diferentes partes de la integración y estandarización. Tanto como hay un solo kernel de Linux, y una manera de integrar las cosas, hay varias maneras de hacer cada cosa, y por lo tanto, una de integrarlo.
+
+En este caso, la primera parte tratará sobre la integración en la interfaz de configuración, la segunda sobre su integración en la cadena de compilación y la última sobre su integración en los ficheros.
+
+En este capítulo es donde se verá como se pueden utilizar solo las zonas de código que interesan sin necesidad de eliminarlas del código oficial, así como la posibilidad de publicar de parches del código para su publicación.
+
+\section{Integración con la interfaz de configuración}
+
+La integración con esta interfaz se hace a través de los ficheros \code{Kconfig}, en ellos, a través de una sintaxis que han creado los del equipo de compilación y herramientas del kernel de Linux, linux-kbuild. Se puede especificar como se desea que se muestre el texto en las interfaces de configuración.
+
+En este proyecto específicamente se va a explicar cual es la apariencia que se ha conseguido y que permite una interfaz amable hacia el usuario.
+
+Aunque hay varios tipos de entradas, se van a explicar los que se han usado aquí. Por un lado, se ha diseñado una entrada general, que se ha decidido que aparezca en la configuración de red, llamada NQaS, que permite, en caso de habilitarla, tener acceso a una pantalla nueva de configuraciones.
+
+Se ha elegido esta forma porque en caso de querer un kernel sin ninguna modificación, esta característica sirve para que desactivándola, se tenga acceso al mismo. De hecho, se ha desactivado por defecto.
+
+Una vez se activa la entrada NQaS, se puede acceder al nuevo menú, donde se encontrarán 3 entradas principalmente, clasificadas a través de comentarios por categorías.
+
+La primera, son las aplicaciones que existen en NQaS, de momento solo existe Ksensor, por lo que solo existe la posibilidad de habilitarlo o no. No se permite elegir integrarlo en el sistema porque ha sido diseñado para ser integrado una parte como sistema y otra como módulo, y al menos de momento no se encuentra ningún motivo para dejarlo estático totalmente.
+
+Como suplemento, cuando se activa esta opción aparecen otras opciones secundarias que permiten elegir si tener diferentes niveles de depuración o activación de trazas de depuración. También se ha habilitado la opción de integrar el trabajo del proyecto \cite{FLAE12} ya que este fue diseñado de cara a su integración en una versión actual del kernel de Linux.
+
+En el apartado de utilidades, se han creado dos entradas, una para cada uno de los módulos implementados en este proyecto. En ambos, se ha hecho una entrada normal, que solo permite, como en el caso anterior, configurarlo como módulo o no compilarlo.
+
+En todos los casos, se ha escrito una ayuda para orientar al usuario sobre la utilidad de cada una de las entradas. Además, se ha dejado documentado en código como crear configuraciones para cambiar, por ejemplo, el tamaño de la zona de memoria del traceador, o las partes que de las que se quieren sacar estadísticas en el módulo de estadísticas.
+
+\section{Integración con la cadena de compilación}
+
+Todas las opciones anteriores, creaban unas definiciones accesibles a la hora de compilar, tales como CONFIG\_NQAS o CONFIG\_NQAS\_STATS, etc. Con estas, hay que modificar los Makefile para que configuren correctamente el entorno. En el caso de CONFIG\_NQAS, se ha elegido utilizar este parámetro para la inclusión o no de la carpeta, y su correspondiente Makefile en la compilación del código. Por lo tanto, con una simple linea en el fichero \code{/net/Makefile}, se ha habilitado la compilación o no de las utilidades.
+
+Tanto como esta integración era suficiente para compilar todo o nada, se ha diseñado un sistema a través del cual utilizando varios flags, como el mencionado antes, CONFIG\_NQAS\_STATS, o CONFIG\_NQAS\_CAPTURE\_TRACER, se pueden incluir o no ficheros utilizando líneas como estas
+
+\begin{lstlisting}[language=make,caption={}, label={}]
+#
+# Makefile for nqas research group's programs and features
+#
+
+obj-$(CONFIG_NQAS_KSENSOR) += kscap.o
+obj-$(CONFIG_NQAS_STATS) += irq_stats.o
+obj-$(CONFIG_NQAS_CAPTURE_TRACER) += capture_tracer.o
+\end{lstlisting}
+
+
+En estas líneas se ha dejado que se compilen como objetos separados. En este caso específico, al no haber un fichero objeto que se compusiera de varios no se llega a ver la flexibilidad de esta configuración, pero es posible elegir que partes se van a compilar y cuales no dependiendo del valor de las variables CONFIG\_*.
+
+\section{Integración en los ficheros originales}
+
+Además de dejar hacer un filtrado por ficheros, también se puede hacer un filtrado por líneas, de tal manera que haya líneas que solo se compilen cuando el módulo está siendo compilado. Este es el caso por ejemplo del \reference{stats-tracer-integration}{código antes expuesto}.
+
+El problema muchas veces es que el código quede legible aún después de la integración, aunque esto signifique replicar código. Es importante que aunque se desperdicien (copiando o duplicando) dos líneas de código, el código sea legible, ya que Linux ya es suficientemente complicado como para que se admitan parches que dificulten el trabajo de los cazadores de fallos (bugs).
+
+Un ejemplo de una mala integración sería el siguiente trozo de código.
+
+\begin{lstlisting}[caption={}, label={}]
+static void net_rx_action(struct softirq_action *h)
+{
+	while (!list_empty(&sd->poll_list)) {
+		if (unlikely(work == weight)) {
+			if (unlikely(napi_disable_pending(n))) {
+				local_irq_enable();
+				napi_complete(n);
+				local_irq_disable();
+#if IS_ENABLED(CONFIG_NQAS_STATS)
+				n->capture_stats.enough_quota++;
+#endif /* CONFIG_NQAS_STATS */
+			} else {
+				list_move_tail(&n->poll_list, &sd->poll_list);
+#if IS_ENABLED(CONFIG_NQAS_STATS)
+				n->capture_stats.insufficient_quota++;
+#endif /* CONFIG_NQAS_STATS */
+			}
+		}
+#if IS_ENABLED(CONFIG_NQAS_CAPTURE_TRACER)
+		capture_tracer_measure.packets += work;
+#endif
+
+#if IS_ENABLED(CONFIG_NQAS_STATS)
+		n->capture_stats.polling_packets += work;
+		n->capture_stats.polling_num++;
+		list_add_if_not_exists(&n->polled_list, &sd->polled_list);
+#endif /* CONFIG_NQAS_STATS */
+
+		netpoll_poll_unlock(have);
+	}
+}
+\end{lstlisting}
+
+Como se puede observar, hay momentos en los que ya no se sabe cual es la línea que está dentro y la que está fuera. Estos son los detalles más importantes dentro de la estandarización. Un trabajo así jamás será admitido como válido dentro del kernel de Linux.
+
+Una posible alternativa que podría ser admisible sería la siguiente:
+\begin{lstlisting}[caption={}, label={}]
+static void net_rx_action(struct softirq_action *h)
+{
+	while (!list_empty(&sd->poll_list)) {
+#if !IS_ENABLED(CONFIG_NQAS_STATS)
+		if (unlikely(work == weight)) {
+			if (unlikely(napi_disable_pending(n))) {
+				local_irq_enable();
+				napi_complete(n);
+				local_irq_disable();
+			} else {
+				list_move_tail(&n->poll_list, &sd->poll_list);
+			}
+		}
+#else /* CONFIG_NQAS_STATS */
+		if (unlikely(work == weight)) {
+			if (unlikely(napi_disable_pending(n))) {
+				local_irq_enable();
+				napi_complete(n);
+				local_irq_disable();
+				n->capture_stats.enough_quota++;
+			} else {
+				n->capture_stats.insufficient_quota++;
+				list_move_tail(&n->poll_list, &sd->poll_list);
+			}
+		}
+		n->capture_stats.polling_packets += work;
+		n->capture_stats.polling_num++;
+		list_add_if_not_exists(&n->polled_list, &sd->polled_list);
+#endif /* CONFIG_NQAS_STATS */
+
+#if IS_ENABLED(CONFIG_NQAS_CAPTURE_TRACER)
+		capture_tracer_measure.packets += work;
+#endif /* CONFIG_NQAS_CAPTURE_TRACER */
+
+		netpoll_poll_unlock(have);
+	}
+}
+\end{lstlisting}
+
+Como se puede observar, tanto como el número de líneas ha crecido, la legibilidad del segmento de código es mucho mayor. Es muy importante que el programador cuide estos detalles, ya que luego arreglarlos requiere un trabajo de mucho más esfuerzo y tiempo. 
+
+Como guía deben seguirse las indicaciones del fichero \code{/Documentation/CodingStyle} disponible en el árbol de kernel. En él se explica cual es la manera que debe ser utilizada para codificar las líneas de código, de configuración y de menús.
+
