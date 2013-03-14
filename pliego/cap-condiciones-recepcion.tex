@@ -67,44 +67,30 @@ La prueba concluye cuando se ha inyectado un número suficiente de datos que aseg
 
 \subsection{Prueba del módulo de estadísticas}
 \subsubsection{Propósito}
-Comprobar la correcta generación de las trazas de inyección: paquetes y datos de inyección.
+Comprobar la correcta generación de las estadísticas.
 
 \subsubsection{Procedimiento}
-En primer lugar, se le pasa al módulo de kernel los datos de inyección desde espacio de
-usuario. Se comprueba que han sido correctamente almacenados en espacio de kernel.
-El módulo generará los paquetes de datos. Hay que comprobar que se han generado de
-manera correcta y que están correctamente almacenados. También hay que comprobar
-que el array de datos de gestión está correctamente inicializado, actualizado y que es
-accesible desde otros módulos de kernel.
+Ya que es necesario comprobar que el número de paquetes capturados coincide con los que han sido enviados, se inyectarán a través de la arquitectura de inyección hardware directamente, paquetes a una tasa baja. Por lo tanto, se deberá conseguir contar el número suficiente de paquetes para validar las cuentas de las estadísticas.
 
 \subsubsection{Conclusión}
-Esta prueba no finaliza hasta que no se generen flujos suficientes para agotar la
-memoria de kernel y que el módulo de gestión tenga que avisar de que no hay espacio,
-antes de machar información.
+Esta prueba finaliza cuando con un número superior a un millón, las estadísticas y los paquetes enviado coinciden en número, cuidando que el sistema no pierda paquetes.
 
-\subsection{Prueba de módulo de inyección}
-Propósito:
+\subsection{Prueba de Ksensor}
+\subsubsection{Propósito}
+Comprobar que se realiza de manera correcta la captura y el procesamiento de paquetes.
 
-Comprobar que se realiza de manera correcta una inyección.
-Procedimiento:
-Se programa una inyección desde espacio de usuario pasando los parámetros adecuados.
-Se comprueba que se realiza un acceso correcto a los arrays correspondientes para
-obtener la información. Para esta prueba, hay que capturar la información inyectada en
-otra máquina para comprobar que el tráfico está correctamente modelado.
-Conclusión de la prueba:
-Esta prueba no termina hasta que no se compruebe el correcto funcionamiento del
-inyector.
+\subsubsection{Procedimiento}
+Se ejecuta una batería de pruebas que se haya ejecutado utilizando la implementación anterior.
+
+\subsubsection{Conclusión}
+Los resultados de la batería de pruebas se compararán con los anteriores para ver si se han conseguido las mejoras esperadas. Además, se deberá comprobar que ya no hay deathlocks cuando se intenta acceder a tiempo real a las estadísticas internas de Ksensor.
 
 \subsection{Prueba de validación global}
-Propósito:
-Comprobar el correcto funcionamiento del prototipo y la correcta interacción de todos
-los módulos.
-Procedimiento:
-Se comprobarán todas las funcionalidades del sistema. En este caso, cuando se decida
-inyectar se capturará en destino para comprobar la corrección de las distribuciones de
-tráfico y de tamaño de paquetes y la correcta temporización. Es importante comprobar
-también la característica de inyección por varios interfaces con varios inyectores
-operando a la vez.
-Conclusión:
-La prueba concluye cuando se comprueba que el funcionamiento del prototipo es
-estable.
+\subsubsection{Propósito}
+Comprobar el correcto funcionamiento del prototipo y la correcta interacción de todos los módulos.
+
+\subsubsection{Procedimiento}
+Se comprobarán todas las funcionalidades del sistema. En este caso, se activarán los tres componentes de este proyecto y se ejecutarán las baterías de pruebas.
+
+\subsubsection{Conclusión}
+Cuando finalice la batería de pruebas, se comprobará que todos los datos siguen el orden establecido y que los nuevos datos son legibles y son válidos en forma y tamaño.
