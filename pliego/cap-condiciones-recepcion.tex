@@ -1,0 +1,118 @@
+\chapter{Condiciones de recepción y pruebas}
+n este apartado se definen las condiciones que se deben verificar en la entrega del proyecto. Se han definido una serie de pruebas que deben ser realizadas para proceder a la verificación de los desarrollos y comprobar el correcto cumplimiento de las especificaciones recogidas en el documento de Memoria.
+
+Las pruebas aquí recogidas constituyen la base para la aceptación del sistema, dejando al criterio del personal encargado del desarrollo la elaboración de otras pruebas adicionales.
+
+\section{Derechos de explotación sobre el producto}
+La herramienta que se desarrolle como resultado del proyecto será propiedad del diseñador, Javier Domingo. La propiedad intelectual y el derecho al uso de la herramienta que se desarrolle, pertenecerá exclusivamente a Javier Domingo, respetándose el derecho moral del equipo investigador a ser designado como co-autores de los desarrollos.
+
+El diseño y el proyecto en general se ha licenciado con una licencia CC-BY-NC-SA. Se puede consultar esta licencia íntegramente en \cite{CBSN13}. Las partes de código que se han utilizado a modo explicativo y el código asociado al mismo está licenciado bajo la licencia GPLv3 \cite{GPLV3}.
+
+El cliente se puede reservar el derecho a no distribuir el proyecto o el módulo, pero en caso de hacerlo, deberá hacerlo conforme a las citadas licencias.
+
+\section{Entorno de pruebas}
+Las pruebas se realizarán en el marco del proyecto de continuación planteado. La ubicación de las pruebas, por tanto está todavía por definir.
+
+\subsection{Materiales necesarios}
+Dentro de los materiales necesarios para la realización de las pruebas se distinguirá el material hardware del software. En cuanto al hardware, los elementos necesarios son los siguientes:
+\begin{itemize}
+\item Un ordenador con una DAG \cite{DAPR10} que se utilizará como inyector.
+\item Un ordenador personal que se utilizará para capturar las trazas inyectadas.
+\item Un switch que conecta ambos ordenadores.
+\end{itemize}
+
+En lo relativo al software, serán necesarios dos sistemas Debian GNU/Linux, donde uno de ellos controlará el inyector hardware que inserta las trazas de tráfico configuradas, y el otro capturará las trazas inyectadas para su posterior análisis.
+
+\subsection{Personal necesario}
+En lo referente al personal, serán necesarios los siguientes perfiles:
+\begin{itemize}
+\item Un director de proyecto que supervise el desarrollo de las pruebas.
+\item Un ingeniero de diseño que verifique el diseño del sistema.
+\item Un programador que comprueba el correcto funcionamiento del software.
+\end{itemize}
+
+\section{Pruebas de validación}
+En este apartado se especifican las pruebas a las que debe ser sometido el prototipo para la verificación de su correcto funcionamiento y la validación de los trabajos realizados. Como ya se ha indicado anteriormente estas pruebas se realizarán sobre el prototipo que se implementa en el proyecto de continuación propuesto. En dicho proyecto se ha incluido en el plan de trabajo un paquete de trabajo para realizar estas pruebas.
+
+
+\subsection{Prueba del interfaz de usuario}
+\subsubsection{Propósito}
+Comprobar que el interfaz de los módulos hacia el usuario es capaz de mostrar datos por el sistema de ficheros procfs. El usuario deberá además, poder cargar y descargar el módulo, y los datos deberán ser reseteados en el proceso automáticamente.
+\subsubsection{Procedimiento}
+Se iniciará la máquina, y se cargarán los módulos uno a uno comprobando 
+
+Conclusión de la prueba:
+
+La prueba se dará por finalizada cuando se hayan mostrado todas las opciones de
+ejecución que presenta el sistema y se haya comprobado que se solicitan los parámetros
+necesarios para cada caso y dichos parámetros son recogidos y almacenados
+correctamente.
+\subsection{Prueba del manager}
+Propósito:
+Comprobar que le manager realiza las llamadas adecuadas en función de la información
+que recibe. Y, por otra parte, comprobar que en cada llamada pasa correctamente los
+parámetros adecuados.
+Procedimiento:
+Se inicia el manager y se le van pasando los códigos de operaciones correspondientes y
+los parámetros emulando la actuación del interfaz de usuario. El manager por su parte,
+irá realizando llamadas pasando los parámetros adecuados.
+Conclusión de la prueba
+La prueba se da por concluida cuando se comprueba que el manager identifica
+correctamente las operaciones que se pueden realizar con las llamadas que tiene que
+hacer y los parámetros que tiene que pasar en cada caso.
+\subsection{Pruebas del generador de datos}
+Objetivo:
+Comprobar que el generador de datos obtiene en una array los datos de inyección según
+las distribuciones solicitadas para cada caso.
+Procedimiento:
+
+Introducir los parámetros indicados para la generación de los datos y comprobar que los
+datos salen correctamente almacenados en un array. Se deben comprobar todas las
+distribuciones posibles.
+Conclusión de la prueba:
+La prueba concluye cuando se comprueba que el generador de datos es capaz de generar
+datos de todas las distribuciones posibles de manera correcta. Almacenarlos en un array
+de estructuras correctamente declarado y de tamaño indicado.
+
+\subsection{Prueba del módulo de gestión}
+Propósito:
+Comprobar la correcta generación de las trazas de inyección: paquetes y datos de
+inyección.
+Procedimiento:
+En primer lugar, se le pasa al módulo de kernel los datos de inyección desde espacio de
+usuario. Se comprueba que han sido correctamente almacenados en espacio de kernel.
+El módulo generará los paquetes de datos. Hay que comprobar que se han generado de
+manera correcta y que están correctamente almacenados. También hay que comprobar
+que el array de datos de gestión está correctamente inicializado, actualizado y que es
+accesible desde otros módulos de kernel.
+Conclusión:
+Esta prueba no finaliza hasta que no se generen flujos suficientes para agotar la
+memoria de kernel y que el módulo de gestión tenga que avisar de que no hay espacio,
+antes de machar información.
+
+\subsection{Prueba de módulo de inyección}
+Propósito:
+
+Comprobar que se realiza de manera correcta una inyección.
+Procedimiento:
+Se programa una inyección desde espacio de usuario pasando los parámetros adecuados.
+Se comprueba que se realiza un acceso correcto a los arrays correspondientes para
+obtener la información. Para esta prueba, hay que capturar la información inyectada en
+otra máquina para comprobar que el tráfico está correctamente modelado.
+Conclusión de la prueba:
+Esta prueba no termina hasta que no se compruebe el correcto funcionamiento del
+inyector.
+
+\subsection{Prueba de validación global}
+Propósito:
+Comprobar el correcto funcionamiento del prototipo y la correcta interacción de todos
+los módulos.
+Procedimiento:
+Se comprobarán todas las funcionalidades del sistema. En este caso, cuando se decida
+inyectar se capturará en destino para comprobar la corrección de las distribuciones de
+tráfico y de tamaño de paquetes y la correcta temporización. Es importante comprobar
+también la característica de inyección por varios interfaces con varios inyectores
+operando a la vez.
+Conclusión:
+La prueba concluye cuando se comprueba que el funcionamiento del prototipo es
+estable.
