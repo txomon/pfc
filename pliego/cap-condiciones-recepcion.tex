@@ -38,54 +38,46 @@ En este apartado se especifican las pruebas a las que debe ser sometido el proto
 \subsection{Prueba del interfaz de usuario}
 \subsubsection{Propósito}
 Comprobar que el interfaz de los módulos hacia el usuario es capaz de mostrar datos por el sistema de ficheros procfs. El usuario deberá además, poder cargar y descargar el módulo, y los datos deberán ser reseteados en el proceso automáticamente.
+
 \subsubsection{Procedimiento}
-Se iniciará la máquina, y se cargarán los módulos uno a uno comprobando 
+Se iniciará la máquina, y se cargarán los módulos uno a uno comprobando que las estadísticas o trazas se van actualizando. Cuando se haya comprobado que los datos tienen el formato de salida especificado por el programador, y contienen los datos especificados en el diseño, se descargará uno a uno, y se volverán a cargar, comprobando que en la recarga, los datos se han reiniciado a cero.
 
-Conclusión de la prueba:
+\subsubsection{Conclusión de la prueba}
+La prueba se dará por finalizada cuando se haya asegurado que el procedimiento de carga y descarga tiene los efectos descritos en el sistema, y además, la interfaz hacia el usuario es tal y como se ha descrito.
 
-La prueba se dará por finalizada cuando se hayan mostrado todas las opciones de
-ejecución que presenta el sistema y se haya comprobado que se solicitan los parámetros
-necesarios para cada caso y dichos parámetros son recogidos y almacenados
-correctamente.
-\subsection{Prueba del manager}
-Propósito:
-Comprobar que le manager realiza las llamadas adecuadas en función de la información
-que recibe. Y, por otra parte, comprobar que en cada llamada pasa correctamente los
-parámetros adecuados.
-Procedimiento:
-Se inicia el manager y se le van pasando los códigos de operaciones correspondientes y
-los parámetros emulando la actuación del interfaz de usuario. El manager por su parte,
-irá realizando llamadas pasando los parámetros adecuados.
-Conclusión de la prueba
-La prueba se da por concluida cuando se comprueba que el manager identifica
-correctamente las operaciones que se pueden realizar con las llamadas que tiene que
-hacer y los parámetros que tiene que pasar en cada caso.
-\subsection{Pruebas del generador de datos}
-Objetivo:
-Comprobar que el generador de datos obtiene en una array los datos de inyección según
-las distribuciones solicitadas para cada caso.
-Procedimiento:
+\subsection{Prueba del demonio}
+\subsubsection{Propósito}
+Comprobar que el demonio diseñado recibe y devuelve correctamente los datos especificados a la arquitectura.
 
-Introducir los parámetros indicados para la generación de los datos y comprobar que los
-datos salen correctamente almacenados en un array. Se deben comprobar todas las
-distribuciones posibles.
-Conclusión de la prueba:
-La prueba concluye cuando se comprueba que el generador de datos es capaz de generar
-datos de todas las distribuciones posibles de manera correcta. Almacenarlos en un array
-de estructuras correctamente declarado y de tamaño indicado.
+\subsubsection{Procedimiento}
+Se inicia una prueba de la arquitectura, y se comprueba que todas las partes del proyecto devuelven sus correspondientes datos. Además, debe comprobarse que entre dos pruebas, no queda ningún dato en la sonda.
 
-\subsection{Prueba del módulo de gestión}
-Propósito:
-Comprobar la correcta generación de las trazas de inyección: paquetes y datos de
-inyección.
-Procedimiento:
+\subsubsection{Conclusión de la prueba}
+La prueba se da por concluida cuando se comprueba que la arquitectura recibe correctamente los parámetros.
+
+\subsection{Pruebas del módulo de trazas}
+\subsubsection{Objetivo}
+Comprobar que las mediciones realizadas por el traceador tienen sentido y concordancia con el resto de parámetros medidos por otros medios.
+
+\subsubsection{Procedimiento}
+Se inyectará tráfico, donde se verán el número total de paquetes capturados que se reflejen en las estadísticas del sistema, y se comprobará que estos concuerdan con el sumatorio de los paquetes capturados en softirqs.
+
+\subsubsection{Conclusión de la prueba}
+La prueba concluye cuando se ha inyectado un número suficiente de datos que aseguran que no haya posibles errores en la medición.
+
+\subsection{Prueba del módulo de estadísticas}
+\subsubsection{Propósito}
+Comprobar la correcta generación de las trazas de inyección: paquetes y datos de inyección.
+
+\subsubsection{Procedimiento}
 En primer lugar, se le pasa al módulo de kernel los datos de inyección desde espacio de
 usuario. Se comprueba que han sido correctamente almacenados en espacio de kernel.
 El módulo generará los paquetes de datos. Hay que comprobar que se han generado de
 manera correcta y que están correctamente almacenados. También hay que comprobar
 que el array de datos de gestión está correctamente inicializado, actualizado y que es
 accesible desde otros módulos de kernel.
-Conclusión:
+
+\subsubsection{Conclusión}
 Esta prueba no finaliza hasta que no se generen flujos suficientes para agotar la
 memoria de kernel y que el módulo de gestión tenga que avisar de que no hay espacio,
 antes de machar información.
