@@ -4,16 +4,30 @@
 \chapter{Diseño}
 Una vez planteados los requerimientos y especificaciones iniciales de la migración de Ksensor, realizado el estudio de alternativas de los puntos más críticos del diseño y elegidas las alternativas óptimas en cada caso, en este capítulo se describirá de forma breve el diseño general de la solución propuesta en el presente proyecto.
 
-Los cambios de Ksensor no serán tanto cambios estructurales o de diseño de alto nivel, si no una optimización del diseño de bajo nivel y una actualización del alto nivel para adaptarse a los últimos métodos.
+Primero, se hará una introducción al método de captura de paquetes en el kernel, y acto seguido, se describirán los cambios en Ksensor y los módulos. Los cambios de Ksensor no serán tanto cambios estructurales o de diseño de alto nivel sino una optimización del diseño de bajo nivel y una actualización del alto nivel para adaptarse a los últimos métodos. En lo referente a los módulos, se resumirá el diseño explicado con mayor detenimiento en los documentos de alto y bajo nivel.
+
+\section{Captura normal}
+Para entender donde está insertado Ksensor, y donde hacen los módulos su trabajo, se explicará a continuación el proceso de captura normal del kernel. En la figura \reference{fig:captura-paquete}{Diagrama de la captura de un paquete} se ha realizado una representación a través de figuras para entender como está hecho el diagrama de flujo de una captura.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=10cm]{flujo-captura}
+\caption{Diagrama de la captura de un paquete muy simplificado}
+\label{fig:captura-paquete}
+\end{figure}
+
+Los paquetes vienen desde el router azul y llegan a la tarjeta. Ésta, a través de DMA si está disponible, envía los paquetes hacia la memoria activando a su vez una interrupción hardware. Dicha interrupción introduce una petición en el planificador para la ejecución de una interrupción software (softirq).
+
+Cuando se ejecuta la softirq, se llama a la función de poll, y esta se encarga de adquirir los paquetes y pasárselos a la rutina de captura de paquetes. Este es el punto en el que se interceptan los paquetes ya que, después, se ejecutan las rutinas de procesamiento por protocolo.
 
 \section{Ksensor}
-Esta es la parte que sin duda ha llevado más carga de diseño. Hay dos razones principales, por un lado, la necesidad de identificar que secciones del diseño de bajo nivel hacían que la aplicación no fuera todo lo eficiente que se podía hacer, por otro lado, la dificultad de abstraer el diseño que se ha dado en el kernel actual y conseguir unificar el diseño antiguo con el método innovador.
+Esta es la parte que sin duda ha llevado más carga de diseño. Hay dos razones principales. Por un lado, la necesidad de identificar qué secciones del diseño de bajo nivel hacían que la aplicación no fuera todo lo eficiente que podría ser. Por otro lado, la dificultad de abstraer el diseño que se ha dado en el kernel actual y conseguir unificar el diseño antiguo con el método innovador.
 
-Dicho esto, los cambios de diseño de alto nivel son para la adaptación a la nueva implementación de NAPI\footnote{Este método de captura de paquetes está diseñado para optimizar el tratamiento de interrupciones en captura de red}, descrita en detalle en los documentos de alto y bajo nivel. Esta nueva forma de implementación separa totalmente la gestión de las interrupciones de un dispositivo con la gestión de este. Por ello, hay que adaptar los parámetros de configuración para referirse a las diferentes entidades que existen en este nuevo modelo.
+Dicho esto, los cambios de diseño de alto nivel tienen como objetivo la adaptación a la nueva implementación de NAPI\footnote{Este método de captura de paquetes está diseñado para optimizar el tratamiento de interrupciones en captura de red}, descrita en detalle en los documentos de alto y bajo nivel. Esta nueva forma de implementación separa totalmente la gestión de las interrupciones de un dispositivo con la gestión de éste. Por ello, hay que adaptar los parámetros de configuración para referirse a las diferentes entidades que existen en este nuevo modelo.
 
-Otro de las modificaciones que se van a efectuar son optimizaciones de rendimiento en la generación de estadísticas de la aplicación. Se ha diseñado la nueva aplicación para que la generación de esta esté fuera de la sección crítica. Una de los mayores problemas de la validación de las aplicaciones que se basan en la mejora del rendimiento respecto a otras es que la realización de estadísticas para las mismas influyen en el rendimiento.
+Otro de las modificaciones que se van a efectuar son optimizaciones de rendimiento en la generación de estadísticas de la aplicación. Se ha diseñado la nueva aplicación para que la generación de ésta esté fuera de la sección crítica. Uno de los mayores problemas de la validación de las aplicaciones que se basan en la mejora del rendimiento es que la realización de estadísticas para su validación influye en el rendimiento.
 
-Por lo expuesto en el anterior párrafo, aunque no se puede suprimir la generación de estadísticas, si que se puede reducir la creación de estas durante las secciones críticas. Para ello, aunque se hacen las mediciones necesarias en las secciones críticas, las estadísticas ahora se calculan fuera de esos bloques.
+Por lo expuesto en el anterior párrafo, aunque no se puede suprimir la generación de estadísticas, sí que se puede reducir la creación de éstas durante las secciones críticas. Para ello, aunque se hacen las mediciones necesarias en las secciones críticas, las estadísticas ahora se calculan fuera de esos bloques.
 
 Además de este diseño, también se ha modificado la estructura del código para adaptarla a los diferentes estándares de facto en el árbol actual de kernel y en la documentación disponible en \cite{OLDD09}, \cite{OULN05} y \cite{OUTL00}.
 
