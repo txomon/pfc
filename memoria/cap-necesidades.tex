@@ -1,7 +1,7 @@
 % !TeX spellcheck = es_ES
 % !TeX root = main.tex
 
-\chapter{Especificación de necesidades del sistema}
+\chapter{Especificación de los requerimientos del sistema}
 La complejidad del sistema que se quiere implementar exige que se elabore con detalle un conjunto de especificaciones de las necesidades del mismo, estando éstas reguladas por los objetivos que se plantearon en el capítulo \reference{cha:objetivos}{Objetivos}. Estas especificaciones servirán de gran utilidad y ayuda como guía para el posterior diseño del sistema, y asimismo, se utilizarán para marcar cuáles son los límites del desarrollo del prototipo.
 
 En este capítulo se desarrollarán las especificaciones bajo dos puntos de vista. Por una parte, atendiendo a las necesidades de los posibles entornos de aplicación de los resultados del proyecto, y por el otro, a las especificaciones funcionales de los elementos de la arquitectura. Primeramente, se describirá el sistema de forma general para que las especificaciones resulten más fáciles de entender.
@@ -11,14 +11,14 @@ Este proyecto tiene como principal objetivo el rediseño y reimplementación de un
 
 Por lo tanto, las especificaciones iniciales que se fijen tienen considerable importancia, ya que de su precisión y exigencia dependerá en gran medida el éxito o fracaso del proyecto.
 
-A partir del diseño realizado se va a desarrollar unas modificaciones en el sensor, el cual debe satisfacer las especificaciones funcionales que se indican en este capítulo. Mediante el prototipo se desea comprobar la funcionalidad del sistema y realizar una serie de pruebas orientadas a validar la hipótesis de partida del proyecto, esto es, la mejora de prestaciones con respecto al anterior Ksensor y su validación, a través de la migración de la sonda a una nueva versión de kernel y la aplicación de correcciones para eliminar defectos observados.
+A partir del diseño realizado se va a desarrollar unas modificaciones en la sonda, las cuales deben satisfacer las especificaciones funcionales que se indican en este capítulo. Mediante el prototipo se desea comprobar la funcionalidad del sistema y realizar una serie de pruebas orientadas a validar la hipótesis de partida del proyecto, esto es, la mejora de prestaciones con respecto al anterior Ksensor y su validación, a través de la migración de la sonda a una nueva versión de kernel y la aplicación de correcciones para eliminar defectos observados.
 
 En el documento Pliego de Condiciones se establecerán cuáles son las pruebas de validación que el prototipo a desarrollar debe cumplir. El plan de pruebas se definirá antes de la implementación y se empleará para demostrar que el prototipo cumple el conjunto de especificaciones funcionales indicadas en el anterior proyecto\cite{KABO05}, que lógicamente, no tienen por qué ser todas las que se impusieron para el diseño global del proyecto, sino para la implementación efectuada.
 
-Por otro lado, una vez validado el prototipo, se procederá a realizar una serie de pruebas de rendimiento en el sensor, con el objeto de poder evaluar la mejora de prestaciones que se obtiene en Ksensor gracias a la actualización. El plan de pruebas a seguir se definirá en el documento \textit{Estudio comparativo de rendimientos}, en el cual se realizará también un estudio comparativo a partir de los resultados obtenidos.
+Por otro lado, una vez validado el prototipo, se procederá a realizar una serie de pruebas de rendimiento en la sonda, con el objeto de poder evaluar la mejora de prestaciones que se obtiene en Ksensor gracias a la actualización. El plan de pruebas a seguir se definirá en el documento \textit{Estudio comparativo de rendimientos}, en el cual se realizará también un estudio comparativo a partir de los resultados obtenidos.
 
 \section{Especificaciones de los entornos de aplicación}
-Los resultados de este proyecto deben estar enfocados para dar solución a las necesidades que se plantean en el ámbito de la investigación sobre la mejora de rendimientos en el análisis de tráfico eficiente en redes de datos. En este sentido, los entornos de aplicación que se plantean son los siguientes:
+Los resultados de este proyecto deben estar enfocados a dar solución a las necesidades que se plantean en el ámbito de la investigación sobre la mejora de rendimientos en el análisis de tráfico eficiente en redes de datos. En este sentido, los entornos de aplicación que se plantean son los siguientes:
 
 \begin{enumerate}
 \item Entorno de desarrollo.
@@ -30,24 +30,24 @@ A continuación se desarrollarán las especificaciones particulares para cada uno 
 estos entornos.
 
 \subsection{Entorno de desarrollo}
-El prototipo de Ksensor que se va a desarrollar en este proyecto se ejecutará también en el nivel de kernel, con lo cual se deben considerar las particularidades, restricciones y complejidades que conlleva una implementación de este tipo. En el kernel difícilmente pueden utilizarse herramientas de depuración tipo gdb, y además, un simple error o bug puede llegar a provocar el colapso total del sistema.
+El prototipo de Ksensor que se va a desarrollar en este proyecto se ejecutará también en el nivel de kernel, con lo cual se deben considerar las particularidades, restricciones y complejidades que conlleva una implementación de este tipo. En el kernel difícilmente pueden utilizarse herramientas de depuración tipo gdb, y además, un simple bug puede llegar a provocar el colapso total del sistema.
 
-En consecuencia, será necesario reiniciar la máquina, pero lo que es aún peor, se destruirán la mayor parte de los indicios o evidencias que podían apuntar el origen de dicho fallo. Es por ello que, en el desarrollo de Ksensor, se deben habilitar mecanismos de depuración que permitan comprobar el funcionamiento de los módulos, además de las facilidades de depuración ya implementadas en el kernel, o bien en base a éstas.
+En consecuencia, sería necesario reiniciar la máquina, pero lo que es aún peor, se destruirían la mayor parte de los indicios o evidencias que podían apuntar al origen de dicho fallo. Es por ello que, en el desarrollo de Ksensor, se deben habilitar mecanismos de depuración que permitan comprobar el funcionamiento de los módulos, además de las facilidades de depuración ya implementadas en el kernel, o bien en base a éstas.
 
 A continuación se describe el escenario en el que se desarrollará el Ksensor. Se utilizarán tres ordenadores, conectados entre sí a través de una red independiente:
 \begin{description}
 \item[Gestor] Esta máquina se utilizará como estación de trabajo, desde la cual se accederá al resto de máquinas de forma remota (vía ssh).
 \item[Sonda] Esta máquina se utilizará para la programación, integración y ejecución de Ksensor. El sistema operativo será Debian GNU/Linux, en la versión del kernel 3.6.
-\item[Inyector] Esta máquina se utilizará como inyector de tráfico en las pruebas de validación del prototipo, así como en las pruebas de rendimiento.
+\item[Inyector] Esta máquina se utilizará como inyector de paquetes de tráfico en las pruebas de validación del prototipo, así como en las pruebas de rendimiento.
 \end{description}
 
 La sonda y el inyector estarán conectados entre sí a través de un switch, en el que sólo estarán conectadas estas dos máquinas, para poder controlar el tráfico que se introduce en la red de captura. Ambas máquinas se gestionarán desde el gestor, utilizando una interfaz de red distinta. Se utilizará esta configuración para llevar a cabo el plan de pruebas de validación.
 
 La sonda se configurará de tal manera que, cuando se produzca un error, se saque en los ficheros de registros \textit{logs} el mensaje correspondiente a través del kernel. Por defecto, el mensaje se imprime en la pantalla y se vuelca a un fichero de \textit{logs}, gracias a la aplicación syslogd, utilizando el sistema de salida estándar a través de la función \code{printk}.
 
-No obstante, si el error es grave y el sistema colapsa (la máquina deja de responder) los mensajes no se almacenarán, con lo cual se pierde el motivo por el que se produjo el error. Para evitar esto, se podría utilizar el mecanismo netconsole implementado en Linux, mediante el cual se envían los mensajes por medio de paquetes UDP, antes de que el sistema se cuelgue. La estación de trabajo (gestor) sería el receptor o servidor de dichos mensajes, mientras que la sonda sería el cliente.
+No obstante, si el error es grave y el sistema se colapsa (la máquina deja de responder) los mensajes no se almacenarán, con lo cual se pierde el motivo por el que se produjo el error. Para evitar esto, se podría utilizar el mecanismo netconsole implementado en Linux, mediante el cual se envían los mensajes por medio de paquetes UDP, antes de que el sistema se cuelgue. La estación de trabajo (gestor) sería el receptor o servidor de dichos mensajes, mientras que la sonda sería el cliente.
 
-Otro de los mecanismos que puede ser implementado, aunque con algo más de tiempo dedicado, sería la posibilidad ejecutar un kernel de soporte para que en caso de fallo, tomara el control de la memoria, y guardara el estado completo de la memoria, para posteriormente ser enviado al desarrollador.
+Otro de los mecanismos que puede ser implementado, aunque con algo más de tiempo dedicado, sería la posibilidad de ejecutar un kernel de soporte para que en caso de fallo, tomara el control de la memoria, y guardara el estado completo de la memoria, para posteriormente, ser enviado al desarrollador.
 
 Así pues, las especificaciones a tener en cuenta en el desarrollo de la sonda son las siguientes:
 \begin{itemize}
@@ -63,15 +63,13 @@ El entorno de pruebas se refiere a las pruebas de rendimiento que se van a reali
 
 El escenario en el que se realizarán las pruebas será similar al descrito en la sección anterior. La sonda (Ksensor) y el inyector se conectarán por medio de un switch, de tal forma que todo el tráfico introducido en la red por el inyector irá a parar a la sonda, el cual aplicará la carga de análisis oportuna sobre los paquetes que captura.
 
-Puesto que la finalidad principal de estas pruebas es obtener las características de rendimiento de las sondas, lo más interesante es comprobar el throughput de los mismos cuando se satura el enlace. Antes, se utilizaban varias máquinas para saturar el enlace, ya que es muy difícil que un sistema operativo convencional pueda generar tal volumen de tráfico.
+Puesto que la finalidad principal de estas pruebas es obtener las características de rendimiento de las sondas, lo más interesante es comprobar el throughput de los mismos cuando se satura el enlace. Antes, se utilizaban varias máquinas para saturar el enlace, ya que es muy difícil que un sistema operativo convencional pueda generar tal volumen de tráfico. En la actualidad, se dispone de inyectores hardware \cite{DAPR10} que tienen la capacidad de saturar un enlace a 1Gbps. Este tipo de inyectores no requieren otros equipos, por lo que se podría utilizar un enlace directo. En la arquitectura anterior se utilizaba un switch como forma de agregar tráfico ethernet, y aunque ya no es necesario pues una sola tarjeta DAG puede saturar el enlace, se ha decidido no suprimir el switch para poder seguir disponiendo de unas estadísticas externas.
 
-Ahora, se dispone de inyectores hardware \cite{DAPR10} que tienen la capacidad de saturar un enlace a 1Gbps. Este tipo de inyectores no requieren otros equipos, por lo que se podría utilizar un enlace directo. En la arquitectura anterior se utilizaba un switch como forma de agregar tráfico ethernet, pero se ha decidido no suprimir el switch para poder seguir disponiendo de unas estadísticas externas.
-
-Así pues, en esta configuración se conectarán dos máquinas al switch: una para el sensor y una inyectora. En cierto modo, el inyector es el propio switch, por lo que en las pruebas de rendimiento será necesario obtener también las estadísticas relativas a éste, por llevar una contabilidad exacta por un medio externo.
+Así pues, en esta configuración se conectarán dos máquinas al switch: una como sonda y la otra como inyectora. En cierto modo, el inyector es el propio switch, por lo que en las pruebas de rendimiento será necesario obtener también las estadísticas relativas a éste, por llevar una contabilidad exacta por un medio externo.
 
 Una vez planteado el escenario en el que se realizarán las pruebas de rendimiento, se pueden definir ya las especificaciones que se deben tener en consideración:
 \begin{itemize}
-\item La arquitectura de pruebas del sensor se basará en la plataforma para la automatización de pruebas diseñada en \cite{KABO05}.
+\item La arquitectura de pruebas de la sonda se basará en la plataforma para la automatización de pruebas diseñada en \cite{KABO05}.
 \item El sistema ha de ser capaz de lanzar baterías de pruebas, configurando de forma automatizada todos los agentes que participan en la prueba.
 \item Se desarrollará un agente para facilitar el encendido y apagado de Ksensor y sus módulos adicionales de forma automatizada.
 \item Se proveerán las utilidades necesarias para configurar los parámetros de la sonda y del inyector, así como para obtener la información relativa a todos los agentes que participan en la comunicación.

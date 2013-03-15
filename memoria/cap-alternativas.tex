@@ -2,19 +2,19 @@
 % !TeX root = main.tex
 
 \chapter{Análisis de alternativas}
-En este capítulo se expondrán primeramente las especificaciones y requerimientos básicos del presente proyecto, describiendo brevemente la arquitectura inicial de la cual se parte en el diseño de la sonda e indicando los requerimientos que se le imponen inicialmente.
+En este capítulo se expondrán primeramente las especificaciones y requerimientos básicos del presente proyecto, describiendo brevemente la arquitectura inicial de la cual se parte en el diseño de la sonda e indicando los condicionantes que se le imponen al diseño inicialmente.
 
-Se expondrán asimismo las mejoras que se pretenden conseguir con el nuevo diseño, indicando los requisitos que debe cumplir el kernel del sistema operativo para llevarlas a cabo. A continuación, se expondrán las alternativas de diseño que se deben considerar en la realización del proyecto y se hará un estudio para determinar cuál es la óptima en cada caso.
+Se expondrán asimismo las mejoras que se pretenden conseguir con el nuevo diseño, indicando los requisitos que debe cumplir el kernel del sistema operativo para llevarlas a cabo. Para esto, se explicarán las alternativas de diseño que se deben considerar en la realización del proyecto y se hará un estudio para determinar cuál es la óptima en cada caso.
 
-A lo largo del diseño se han de tomar decisiones que van a contribuir de forma decisiva al éxito o fracaso del proyecto. Por esta razón, conviene analizar minuciosamente las alternativas que existen. No es necesario tener en cuenta todas y cada una de las posibilidades pero sí las que puedan resultar críticas a la hora de aportar una solución.
+A lo largo del diseño se han de tomar decisiones que van a contribuir de forma decisiva al éxito, o fracaso, del proyecto. Por esta razón, conviene analizar minuciosamente las alternativas que existen. No es necesario tener en cuenta todas y cada una de las posibilidades pero sí las que puedan resultar críticas a la hora de aportar una solución.
 
-Así pues, se partirá de los requerimientos apuntados en el primer apartado para a continuación plantear las alternativas concernientes a los puntos más críticos del diseño, y una vez tomadas las decisiones oportunas, se pasará, en el capítulo de Diseño, a describir con mayor detenimiento la solución general propuesta, incidiendo especialmente en las partes previamente discutidas.
+Así pues, se partirá de los requerimientos apuntados en el primer apartado para a continuación plantear las alternativas concernientes a los puntos más críticos del diseño, y una vez tomadas las decisiones oportunas, se pasará, en el capítulo de Diseño, a describir con mayor detenimiento la solución general propuesta, incidiendo especialmente en las partes discutidas en este capítulo.
 
 \section{Especificaciones y requerimientos básicos}
 \label{sec:especificaciones-y-requerimientos-básicos}
-En el presente proyecto se plantea el desarrollo de una sonda de análisis de tráfico a nivel de kernel, para lo cual se parte de un diseño previo de la sonda (Ksensor), realizado en un proyecto anterior \cite{KABO05}. La sonda es el núcleo de una arquitectura dedicada al análisis de tráfico, la cual incluye además de la sonda, algunos módulos externos a éste pero que tienen relación directa con él, como el parser o el OPM. Así pues, se hace necesario considerar los requerimientos que imponen estos módulos, ya que pueden condicionar en buena parte el diseño que se realice en el nivel de kernel.
+En el presente proyecto se plantea el desarrollo de una sonda de análisis de tráfico a nivel de kernel, para lo cual se parte de un diseño previo de la sonda (Ksensor), realizado en un proyecto anterior \cite{KABO05}. La sonda es el núcleo de una arquitectura dedicada al análisis de tráfico, la cual incluye además de la sonda, módulos adicionales que tienen relación directa con él, como el parser o el OPM. En la realización de este proyecto, tras analizar exhaustivamente el funcionamiento de los módulos externos, y su funcionamiento, no se ha considerado que sea necesario su reimplementación.
 
-Por otro lado, conviene especificar las mejoras de diseño que se pretenden obtener con la migración de Ksensor, en base a las cuales se ha justificado la realización de este proyecto. El cumplimiento o no de dichas mejoras condicionarán el éxito o fracaso del proyecto, por lo que se plantearán también las mejoras que ha tenido el kernel de Linux para poder obtenerlas.
+Por otro lado, conviene especificar las mejoras de diseño que se pretenden obtener con la migración de Ksensor, en base a las cuales se ha justificado la realización de este proyecto. El cumplimiento o no de dichas mejoras, condicionarán el éxito o fracaso del proyecto, por lo que se plantearán también las mejoras que ha tenido el kernel de Linux para poder obtenerlas.
 
 \subsection{Arquitectura de partida}
 En la siguiente figura, se puede ver la arquitectura actual del sistema implementado Ksensor. Aunque los módulos que componen el sistema vienen de un sistema anterior llamado Adviser, se explicarán brevemente a continuación.
@@ -22,32 +22,31 @@ En la siguiente figura, se puede ver la arquitectura actual del sistema implemen
 \begin{figure}[h]
 \centering
 \includegraphics[width=\textwidth]{arquitectura-previa}
-\caption{Esquema de la arquitectura previa de ksensor}
+\caption{Esquema de la arquitectura previa de Ksensor}
 \label{fig:arquitectura-previa}
 \end{figure}
 
 En la figura de la \reference{fig:arquitectura-previa}{arquitectura previa} se pueden observar los módulos que componen el sistema. Los paquetes se capturan en las tarjetas de red y el módulo de captura se encarga de procesar directamente los paquetes, sirviéndolos cuando se solicita a las instancias del módulo de procesamiento.
 
-La sonda es el núcleo del sistema de análisis. El resto de módulos pretenden bien configurar su comportamiento (parser) o bien recoger los resultados del procesamiento realizado (OPM). En cualquier caso, el nexo de unión entre todos ellos es la memoria interna del sensor, a la que también nos referiremos como mapa de memoria. En el mapa de memoria se almacena la lógica de decisión que posteriormente utilizará tanto en el módulo de captura, para decidir si un paquete debe ser capturado, como en el módulo de procesamiento del sensor para determinar el análisis que se ha de realizar cada vez que se captura un paquete.
+La sonda es el núcleo del sistema de análisis. El resto de módulos pretenden bien configurar su comportamiento (parser) o bien recoger los resultados del procesamiento realizado (OPM). En cualquier caso, el nexo de unión entre todos ellos es la memoria interna de la sonda, a la que también nos referiremos como mapa de memoria. En el mapa de memoria se almacena la lógica de decisión que posteriormente se utilizará tanto en el módulo de captura, para decidir si un paquete debe ser capturado, como en el módulo de procesamiento de la sonda para determinar el análisis que se ha de realizar al mismo.
 
-El parser es el encargado de cargar en la memoria del sensor la información que éste requiere para funcionar de forma correcta. Para ello, el parser toma como
-entrada un fichero de reglas en XML especificado por el administrador del sistema. El fichero de reglas se escribe utilizando un lenguaje propio, el cual se ha definido teniendo en cuenta muchas características de entornos de captura de tráfico como sistemas de detección de intrusión, cortafuegos, etc.
+El parser es el encargado de cargar en la memoria de la sonda la información que éste requiere para funcionar de forma correcta. Para ello, el parser toma como entrada un fichero de reglas en XML especificado por el administrador del sistema. El fichero de reglas se escribe utilizando un lenguaje propio, el cual se ha definido teniendo en cuenta muchas características de entornos de captura de tráfico como sistemas de detección de intrusión, cortafuegos, etc.
 
-El parser lee e interpreta el fichero de reglas que haya especificado el administrador del sistema y lo traduce al formato que entiende el sensor, almacenando en el mapa de memoria la lógica adecuada y la información de entorno necesaria para el análisis de tráfico. Para ello, se crean varias listas enlazadas: una para el árbol de nodos, otra para los tipos de datos, acciones periódicas, etc. También se reserva un espacio para almacenar las variables, que será donde el sensor deposite la información y estadísticas que se le han pedido.
+El parser lee e interpreta el fichero de reglas especificado por el administrador del sistema y lo traduce al formato que entiende la sonda, almacenando en el mapa de memoria la lógica adecuada y la información de entorno necesaria para el análisis de tráfico. Para ello, se crean varias listas enlazadas: una para el árbol de nodos, otra para los tipos de datos, acciones periódicas, etc. También se reserva un espacio para almacenar las variables, que será donde la sonda deposite la información y las estadísticas que se le han pedido.
 
-Si el parser es la interfaz de entrada al sensor, el módulo de procesamiento offline (OPM) constituye su interfaz de salida. El módulo de procesamiento offline es el encargado de recolectar toda la información que se obtiene como resultado del análisis del tráfico y de formatearla para su posterior procesamiento fuera del sensor.
+Si el parser es la interfaz de entrada a la sonda, el módulo de procesamiento offline (OPM) constituye su interfaz de salida. El módulo de procesamiento offline es el encargado de recolectar toda la información que se obtiene como resultado del análisis del tráfico y de formatearla para su posterior procesamiento fuera de la sonda.
 
-En el nuevo diseño se va a dejar este diseño de los módulos, ya que se ha comprobado empíricamente que no plantea ningún tipo de degradación de rendimiento, y además, permite que la aplicación Ksensor pueda estar en ejecución o no, haciendo uso de la propiedad de modularidad del kernel de Linux.
+En el nuevo diseño se va a mantener este diseño de los módulos, ya que se ha comprobado a través de las baterías de pruebas de que no plantea ningún tipo de degradación de rendimiento, y además, permite que la aplicación Ksensor pueda estar en ejecución o no, haciendo uso de la propiedad de modularidad del kernel de Linux.
 
 \subsection{Mejoras del diseño}
 Este proyecto propone una adaptación del diseño existente de Ksensor a una versión de Linux actual. Preservando su compatibilidad con las herramientas externas pero mejorando el funcionamiento interno, la integración en el árbol de kernel, y creando nuevas herramientas que permitan estudiar el comportamiento del sistema, tanto con Ksensor funcionando como deshabilitado.
 
-Con un análisis exhaustivo del código de las rutinas de recepción de paquetes, se ha llegado a la conclusión de que aún con el sistema en saturación, hay recursos que se destinan a otros procesos de red, como el envío de paquetes. Por ello, es necesario, no tanto cambiar el diseño del sensor, si no crear las herramientas que permitan tener acotados los procesos que no nos interesan para poder planificar nuestro sistema con los parámetros óptimos, en vez de hacerlo a prueba y error.
+Con un análisis exhaustivo del código de las rutinas de recepción de paquetes, se ha llegado a la conclusión de que aún con el sistema en saturación, hay recursos que se destinan a otros procesos de red, como el envío de paquetes. Por ello, es necesario, no tanto cambiar el diseño de Ksensor, si no crear las herramientas que permitan tener acotados los procesos que no nos interesan para poder planificar nuestro sistema con los parámetros óptimos, en vez de hacerlo a prueba y error.
 
 También se pretende mejorar el rendimiento de captura, adaptando el número de paquetes a capturar a las necesidades actuales del sistema, ya que así se evita que la cola varíe de tamaño en forma de dientes de sierra, o que se intenten capturar paquetes que no deberían entrar en la cola. En el apartado de diseño se ampliarán más estos conceptos.
 
 \subsection{Requerimientos de la migración}
-Uno de los mayores propósitos de la migración es aprovechar al máximo todas las herramientas disponibles para la ejecución del proyecto, y para facilitar su desarrollo. Concretamente, se van a utilizar las herramientas que utilizan los desarrolladores de kernel, tales como un sistema de control de versiones, adaptando la manera en la que se tiene estructurado el código para una óptima utilización de las herramientas. También se va a establecer una forma uniforme de integración, ya que no serán solo mejoras a ksensor, si no también utilidades que pueden tener valor a la hora de diagnosticar sistemas.
+Uno de los mayores propósitos de la migración es aprovechar al máximo todas las herramientas disponibles para la ejecución del proyecto, y para facilitar su desarrollo. Concretamente, se van a utilizar las herramientas que utilizan los desarrolladores de kernel, tales como un sistema de control de versiones, adaptando la manera en la que se tiene estructurado el código para una óptima utilización de las herramientas. También se va a establecer una forma uniforme de integración, ya que no serán solo mejoras a Ksensor, si no también utilidades que pueden tener valor a la hora de diagnosticar sistemas.
 
 \section{Estudio de alternativas de diseño}
 En este punto se estudian las diferentes alternativas de migración que se tendrán que considerar en la ejecución del proyecto. En una primera aproximación, se puede observar que muchas de estas alternativas tienen dependencias entre sí, por lo que las decisiones que se tomen para una podrán influir de alguna manera sobre las siguientes.
@@ -137,7 +136,7 @@ En el caso de tener salidas de menos de 1KB, como en el caso del módulo de estad
 \subsection{Sistema de control de versiones}
 Debe decidirse cual es el sistema de control de versiones más adecuado para el proyecto. Esta decisión es muy importante porque hará depender en gran medida las posibilidades de integración con el kernel oficial.
 
-La herramienta electa debe ser eficaz para tamaños de repositorios grandes, flexibilidad de trabajo, opciones de sincronización con otros repositorios. Estas necesidades se especificarán en la sección \reference{scv-criterios}{Criterios de selección}. Es necesario por lo tanto aclarar algunos términos que se van a utilizar en los siguientes puntos con regularidad.
+La herramienta electa debe ser eficaz para tamaños de repositorios grandes, proveer flexibilidad en el trabajo, dar opciones de sincronización con otros repositorios. Estas necesidades se especificarán en la sección \reference{scv-criterios}{Criterios de selección}. Es necesario por lo tanto aclarar algunos términos que se van a utilizar en los siguientes puntos con regularidad.
 
 \begin{description}
 \item[Sistema de control de versiones] 
@@ -158,22 +157,22 @@ En los distribuidos (SCVD), el servidor es el propio repositorio local, en el qu
 A continuación se tendrán en consideración los sistemas de control de versiones más relevantes y usados. Se tratará la herramienta que se utiliza actualmente y la que ha sido desarrollada para este tipo de proyectos.
 
 \paragraph{Subversion}
-Este sistema de control de versiones es un SVCC que se caracteriza por sus simplicidad, linealidad de versiones y gestión de su espacio como un único sistema de ficheros.
+Este sistema de control de versiones es un SVCC que se caracteriza por su simplicidad, linealidad de versiones y gestión de su espacio como un único sistema de ficheros.
 
 Como todo SCVC tiene una versión servidor, que se encarga principalmente de guardar las versiones en una base de datos en la que se pueden configurar permisos de accesos. Soporta varios protocolos de comunicación con sus clientes, como son HTTP, HTTPS, SSH y SVN, su propio protocolo.
 
-Suele tener problemas de configuración de permisos de accesos, ya que todos los guardados, se hacen con el usuario del sistema que se esté utilizando, cambiando muchas veces los permisos, y haciendo que algunos desarrolladores cerraran el flujo a otros. También es frecuente encontrar proyectos grandes con errores de integridad de la base de datos que resultan en una imposibilidad de recuperar determinadas versiones.
+Suele tener problemas de configuración de permisos de accesos, ya que todos los guardados, se hacen con el usuario del sistema que se esté utilizando, cambiando muchas veces los permisos, y haciendo que algunos desarrolladores cierren el flujo a otros. También es frecuente encontrar proyectos grandes con errores de integridad de la base de datos que resultan en una imposibilidad de recuperar determinadas versiones.
 
 Algunos otros problemas son la necesidad de atomicidad del repositorio, que implica una indisponibilidad del repositorio durante su uso por otros desarrolladores, o la forma de manejar las colisiones de código, que crean $3+n$ ficheros por colisión $n$.
 
 \paragraph{Git}
-Este es un SCVD se caracteriza por una total adaptación al estilo de trabajo de los grupos de programadores. Como SCVD, tiene características de inerentes a ello, como son el hecho de que cada repositorio es independiente, posibilitando al desarrollador guardar su trabajo \textit{offline}. También tiene facilidades para llevar un control de la sincronización con otros repositorios.
+Este SCVD se caracteriza por una total adaptación al estilo de trabajo de los grupos de programadores. Como SCVD, tiene características inherentes, como son el hecho de que cada repositorio es independiente, posibilitando al desarrollador guardar su trabajo \textit{offline}. También tiene facilidades para llevar un control de la sincronización con otros repositorios.
 
-Como es distribuido, no hay una versión servidora y una cliente, son todos iguales. La base de datos es local, y está integrada junto al resto de los datos del repositorio. El diseño de Git es relativamente reciente, y se diseño de manera que sirviera para el desarrollo de kernel, los mismos que desarrollan Linux.
+Como es distribuido, no hay una versión servidora y una cliente, son todas iguales. La base de datos es local, y está integrada junto al resto de los datos del repositorio. El diseño de Git es relativamente reciente, y se creo de manera que sirviera para el control del desarrollo de kernel, los mismos que desarrollan Linux.
 
 Está diseñado con la integridad como factor principal. Todos las cosas se guardan en una base de datos referenciados por sus hashes, haciendo que cuando se requiere un objeto que ha sido guardado, se computa el hash durante la descompresión, verificando de esa manera que siempre se mantengan los archivos fielmente guardados.
 
-El método de desarrollo para el que está diseñado permite que un desarrollador pueda basar su trabajo en el trabajo que se hace en un repositorio oficial, y tener sus propias ramas de desarrollo con integración continua.
+El método de desarrollo para el que está diseñado permite que un desarrollador pueda basar su trabajo, en el trabajo que hay en el repositorio oficial, y tener sus propias ramas de desarrollo con integración continua.
 
 \subsubsection{Criterio de la selección}
 \label{scv-criterios}
@@ -191,10 +190,10 @@ Es importante ver las herramientas que utilizan el resto de proyectos similares,
 \item[{Flexibilidad [30\%]}]
 Un elemento más importante que el uso y aprendizaje, que se pueden amortizar con el tiempo, es la posibilidad de que la citada herramienta provea de flexibilidad a la hora de trabajar. Uno de los principales hechos en el desarrollo de código, es la posibilidad de hacer las cosas de diferentes maneras, y un sistema que facilite el desarrollo de las nuevas ideas es algo muy positivo para este tipo de proyectos.
 
-Además, el sistema también tiene que facilitar al máximos el desarrollo paralelo, y el concepto de Integración Continua (\textit{CI: Continuous integration}), ya que como el proyecto oficial del kernel de Linux está en continuo desarrollo y se modifican más de 500 líneas de código al día, es importante que el proyecto no quede desactualizado, para evitar tener que hacer otro proyecto que incluya unas modificaciones tan severas en el código.
+Además, el sistema también tiene que facilitar al máximo el desarrollo paralelo, y el concepto de Integración Continua (\textit{CI: Continuous integration}), ya que como el proyecto oficial del kernel de Linux está en continuo desarrollo y se modifican más de 500 líneas de código al día, es importante que el proyecto no quede desactualizado, para evitar tener que hacer otro proyecto que incluya unas modificaciones tan severas en el código.
 
 \item[{Control de cambios [40\%]}]
-La característica más importante y a la que se le ha dado un mayor peso, es a la posibilidad de saber exactamente cuales son los cambios de una versión a otra, quien ha hecho determinados cambios, y sobre todo, la posibilidad de saber quien ha introducido qué cambios y con qué objetivo.
+La característica más importante, y a la que se le ha dado un mayor peso, es a la posibilidad de saber exactamente cuales son los cambios de una versión a otra, quien ha hecho determinados cambios, y sobre todo, la posibilidad de saber quien ha introducido qué cambios y con qué objetivo.
 
 Hay muchas veces en las que los desarrolladores de kernel no documentan los cambios en las líneas de código a través de comentarios, si no que comentan los cambios en los mensajes que se hacen al guardar. El acceso a la información que proporcionan los desarrolladores de esa manera es clave para la actualización del proyecto.
 
@@ -207,18 +206,18 @@ El sistema de control de versiones que mejor se ajusta a los requerimientos del 
 \begin{tabular}{|c|c|c|c|}
 \hline Criterio & Ponderación & Subversion & Git \\ 
 \hiderowcolors
-\hline Uso y aprendizaje & 10\% & 10/10 & 0/10 \\ 
+\hline Uso y aprendizaje & 10\% & 8/10 & 3/10 \\ 
 \hline Uso en proyectos similares & 20\% & 1/20 & 20/20 \\ 
 \hline Flexibilidad & 30\% & 10/30 & 30/30 \\ 
 \hline Control de cambios & 40\% & 20/40 & 40/40 \\ 
-\hline Total & 100\% & 51/100 & 90/100 \\ 
+\hline Total & 100\% & 49/100 & 93/100 \\ 
 \hline 
 \end{tabular}
 \end{center}
 
 En este proyecto se ha considerado que aún cuando Subversion es más fácil de utilizar, el hecho de que todos los proyectos centrados alrededor del desarrollo de kernel hayan utilizado Git hace que se pondere en positivo el esfuerzo requerido de aprendizaje.
 
-Además, las facilidades de git para el control de cambios, permiten ponerse en contacto fácilmente con el desarrollador que ha participado en el código.
+Además, las facilidades de Git para el control de cambios, permiten ponerse en contacto fácilmente con el desarrollador que ha participado en el código.
 
 \subsection{Método de trabajo y liberación de código}
 En esta sección se va a estructurar, ya que es uno de los objetivos del proyecto, la manera en la que se van a guardar las modificaciones de código y la forma en la que se va a organizar el trabajo del proyecto.
@@ -233,7 +232,7 @@ Aunque este método de trabajo esté bien, las posibilidades que se abren al utili
 El nuevo sistema, se puede permitir la integración completa en el árbol de código de kernel, siendo de esta manera la más apropiada en caso de que se libere el código.
 
 \subsubsection{Integración del código en el árbol de Linux}
-Actualmente la manera de conseguir hacer funcionar la aplicación ksensor en el árbol de kernel es a través de la aplicación del parche, y posterior compilación del kernel. Una vez parcheado, no hay una manera de no compilar esa parte.
+Actualmente la manera de conseguir hacer funcionar la aplicación Ksensor en el árbol de kernel es a través de la aplicación del parche, y posterior compilación del kernel. Una vez parcheado, no hay una manera de no compilar esa parte.
 
 Esta forma de trabajar complica la posibilidad de desarrollar utilidades complementarias pero independientes, pues no se puede discernir entre lo que pertenece al árbol del kernel y lo que no.
 

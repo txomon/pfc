@@ -4,28 +4,39 @@
 \chapter{Diseño}
 Una vez planteados los requerimientos y especificaciones iniciales de la migración de Ksensor, realizado el estudio de alternativas de los puntos más críticos del diseño y elegidas las alternativas óptimas en cada caso, en este capítulo se describirá de forma breve el diseño general de la solución propuesta en el presente proyecto.
 
-Tanto como no se han decidido cambios propiamente en el diseño del sensor, habrán de adaptarse la estructura del código para su integración propuesta, así como migrar a una rama de desarrollo paralela al kernel de Linux.
+Los cambios de Ksensor no serán tanto cambios estructurales o de diseño de alto nivel, si no una optimización del diseño de bajo nivel y una actualización del alto nivel para adaptarse a los últimos métodos.
 
-No obstante, aunque no se haya cambiado el diseño de alto nivel del proyecto anterior, se harán cambios estructurales de bajo nivel. A continuación, se describirán los nuevos elementos que compondrán el sistema.
+\section{Ksensor}
+Esta es la parte que sin duda ha llevado más carga de diseño. Hay dos razones principales, por un lado, la necesidad de identificar que secciones del diseño de bajo nivel hacían que la aplicación no fuera todo lo eficiente que se podía hacer, por otro lado, la dificultad de abstraer el diseño que se ha dado en el kernel actual y conseguir unificar el diseño antiguo con el método innovador.
+
+Dicho esto, los cambios de diseño de alto nivel son para la adaptación a la nueva implementación de NAPI\footnote{Este método de captura de paquetes está diseñado para optimizar el tratamiento de interrupciones en captura de red}, descrita en detalle en los documentos de alto y bajo nivel. Esta nueva forma de implementación separa totalmente la gestión de las interrupciones de un dispositivo con la gestión de este. Por ello, hay que adaptar los parámetros de configuración para referirse a las diferentes entidades que existen en este nuevo modelo.
+
+Otro de las modificaciones que se van a efectuar son optimizaciones de rendimiento en la generación de estadísticas de la aplicación. Se ha diseñado la nueva aplicación para que la generación de esta esté fuera de la sección crítica. Una de los mayores problemas de la validación de las aplicaciones que se basan en la mejora del rendimiento respecto a otras es que la realización de estadísticas para las mismas influyen en el rendimiento.
+
+Por lo expuesto en el anterior párrafo, aunque no se puede suprimir la generación de estadísticas, si que se puede reducir la creación de estas durante las secciones críticas. Para ello, aunque se hacen las mediciones necesarias en las secciones críticas, las estadísticas ahora se calculan fuera de esos bloques.
+
+Además de este diseño, también se ha modificado la estructura del código para adaptarla a los diferentes estándares de facto en el árbol actual de kernel y en la documentación disponible en \cite{OLDD09}, \cite{OULN05} y \cite{OUTL00}.
 
 \section{Módulo de estadísticas}
-El módulo de estadísticas, es uno diferente al mencionado en el proyecto ksensor \cite{KABO05}. Tanto como ese es de estadísticas internas de Ksensor, este trata de sacar a la luz otras mediciones que son útiles a la hora de diagnosticar la efectividad del sistema de captura. En este apartado se explicarán primeramente las características principales de este módulo y después se pasará a explicar el funcionamiento general del mismo.
+El módulo de estadísticas, es uno diferente al mencionado en el proyecto Ksensor \cite{KABO05}. Mientras que ese es de estadísticas internas de Ksensor, este trata de sacar a la luz otras mediciones que son útiles a la hora de diagnosticar la efectividad del sistema de captura. En este apartado se explicarán primeramente las características principales de este módulo y después se pasará a explicar el funcionamiento general del mismo.
 
-Durante su funcionamiento, llevará la cuenta de varios datos que son interesantes para el diagnóstico del sistema, como la cantidad de veces que se han recogido paquetes, el número de interrupciones de la tarjeta y otros datos que permiten hacer mediciones de como de efectiva es la captura.
+Durante su funcionamiento, llevará la cuenta de varios datos que son interesantes para el diagnóstico del sistema, como la cantidad de veces que se han recogido paquetes, el número de interrupciones de la tarjeta y otros datos que permiten hacer cálculos de la efectividad es la captura.
 
 Es importante remarcar que estos datos son los necesarios para hacer diagnósticos de la efectividad del módulo de captura. Recoger estadísticas que son propias del kernel persé es algo que no se ha tenido en cuenta hasta ahora. Es algo necesario para poder medir la efectividad de la sonda.
 
-Está constituido por dos partes: las modificaciones en el kernel para hacer posible la creación y medición de dichas estadísticas; y el módulo que proporciona el acceso a las mismas.
+Está constituido por dos partes: las modificaciones en el kernel para hacer posible la creación y medición de dichas estadísticas; y el módulo de kernel extraíble que proporciona el acceso a las mismas cuando está cargado.
 
 El usuario del módulo, deberá activar una opción en la compilación del kernel, y podrá insertarlo para observar las mediciones que se hagan a través de unos ficheros virtuales específicamente creados para tal fin.
 
-\section{Módulo de traceo}
+\section{Módulo de trazas}
 Este módulo ha sido creado específicamente para la monitorización de la distribución de tiempos de captura. Ha sido creado porque tras haber analizado las estadísticas que proveía la anterior implementación de Ksensor, se han visto defectos que hacen pensar que el sistema actual no es todo lo eficiente que puede ser.
 
-Para ello, el módulo estará también dividido en dos partes, como en el otro caso, la primera son las modificaciones que habrá que hacer para hacer las mediciones y guardar los tiempos de cada traza, y la segunda será el módulo que inicializará la función para salvar las trazas.
+Para ello, el módulo esta también dividido en dos partes, como en el otro caso, la primera son las modificaciones que hay que hacer para efectuar las mediciones y guardar los tiempos de cada traza, y la segunda será el módulo de kernel, extraíble, que inicializará la función para salvar las trazas.
 
 De esta manera, el usuario puede elegir cuando se emplea tiempo en guardar las trazas y cuando no. Además, tendrá acotado en todo momento el tiempo en el que se hacen las trazas.
 
 Este diseño permite al usuario cargar y descargar el módulo, utilizando diferentes funciones que hagan cosas totalmente diferentes de las establecidas si se quiere, sin necesidad de recompilar el módulo.
 
-A parte de la característica de dejar que el módulo haga lo que considere con los datos, el módulo diseñado en un primer lugar, crea un fichero virtual para acceder a los datos en modo de lista, permitiendo de esa manera que el usuario pueda acceder a todos los datos en orden.
+Este tipo de diseño tiene la característica de dejar que el módulo de kernel haga lo que considere con los datos, ya que, aunque el módulo diseñado y creado en este proyecto tiene el funcionamiento descrito, la flexibilidad que permite la interfaz de las modificaciones del kernel para efectuar las mediciones hace que este pueda ser totalmente cambiado mientras respete la interfaz.
+
+El módulo de kernel que se ha diseñado y llevado a cabo, crea un fichero virtual para acceder a los datos en modo de lista, permitiendo de esa manera que el usuario pueda acceder a todos los datos en orden. Por lo citado anteriormente, bastaría con hacer cambios en este módulo únicamente, sin necesidad de recompilar o modificar el kernel para conseguir otro comportamiento totalmente diferente.
